@@ -17,6 +17,7 @@ const EXPORT_REGION_ID = "__export_window__";
 
 function WaveformWorkspace() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
   const regionsRef = useRef<RegionsPlugin | null>(null);
   const windowModeRef = useRef(false);
@@ -160,40 +161,81 @@ function WaveformWorkspace() {
     if (!ready || !regions) return;
     regions.clearRegions();
 
-    const active = clips.find((c) => c.id === activeClipId);
-    if (active && durationSamples > 0) {
+    const total = durationSamples || 1;
+    const bg = bgRef.current;
+    if (bg) {
+      bg.innerHTML = "";
+      const mkRect = (
+        startSample: number,
+        endSample: number,
+        color: string,
+      ) => {
+        const left = (startSample / total) * 100;
+        const width = ((endSample - startSample) / total) * 100;
+        const el = document.createElement("div");
+        el.style.position = "absolute";
+        el.style.top = "0";
+        el.style.bottom = "0";
+        el.style.left = `${left}%`;
+        el.style.width = `${width}%`;
+        el.style.background = color;
+        bg.appendChild(el);
+      };
+
+      const active = clips.find((c) => c.id === activeClipId);
+      if (active && durationSamples > 0) {
+        const settings = project?.export_settings;
+        const pre = settings?.pre_window_s ?? 5;
+        const post = settings?.post_window_s ?? 5;
+        mkRect(
+          Math.max(0, active.core_start_sample - pre * SAMPLE_RATE),
+          Math.min(
+            durationSamples,
+            active.core_end_sample + post * SAMPLE_RATE,
+          ),
+          wfColors.exportWindow,
+        );
+      }
+
+      for (const clip of clips) {
+        const color =
+          clip.status === "rejected"
+            ? wfColors.rejectedRegion
+            : (clip.flags?.length ?? 0) > 0
+              ? wfColors.flaggedRegion
+              : wfColors.coreRegion;
+        mkRect(clip.core_start_sample, clip.core_end_sample, color);
+      }
+    }
+
+    // Transparent click targets (regions) on top of the background layer.
+    const active2 = clips.find((c) => c.id === activeClipId);
+    if (active2 && durationSamples > 0) {
       const settings = project?.export_settings;
       const pre = settings?.pre_window_s ?? 5;
       const post = settings?.post_window_s ?? 5;
       regions.addRegion({
         id: EXPORT_REGION_ID,
         start:
-          Math.max(0, active.core_start_sample - pre * SAMPLE_RATE) /
+          Math.max(0, active2.core_start_sample - pre * SAMPLE_RATE) /
           SAMPLE_RATE,
         end:
           Math.min(
             durationSamples,
-            active.core_end_sample + post * SAMPLE_RATE,
+            active2.core_end_sample + post * SAMPLE_RATE,
           ) / SAMPLE_RATE,
-        color: wfColors.exportWindow,
+        color: "transparent",
         drag: false,
         resize: false,
       });
     }
 
     for (const clip of clips) {
-      const isActive = clip.id === activeClipId;
       regions.addRegion({
         id: clip.id,
         start: samplesToSeconds(clip.core_start_sample),
         end: samplesToSeconds(clip.core_end_sample),
-        color: isActive
-          ? wfColors.activeRegion
-          : clip.status === "approved"
-            ? wfColors.approvedRegion
-            : clip.status === "rejected"
-              ? wfColors.rejectedRegion
-              : wfColors.proposedRegion,
+        color: "transparent",
         drag: false,
         resize: false,
       });
@@ -270,7 +312,22 @@ function WaveformWorkspace() {
           </Group>
         )}
       </Group>
-      <div ref={containerRef} style={{ minHeight: waveHeight }} />
+      <div style={{ position: "relative", minHeight: waveHeight, flex: 1 }}>
+        <div
+          ref={bgRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: "none",
+            overflow: "hidden",
+          }}
+        />
+        <div
+          ref={containerRef}
+          style={{ position: "relative", zIndex: 1, minHeight: waveHeight }}
+        />
+      </div>
     </Stack>
   );
 }
