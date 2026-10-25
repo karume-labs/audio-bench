@@ -1,7 +1,6 @@
 import { orderedClips } from "@audio-bench/domain";
 import {
   Alert,
-  Badge,
   Button,
   Divider,
   Group,
@@ -18,32 +17,25 @@ import { notifications } from "@mantine/notifications";
 import {
   IconDeviceFloppy,
   IconFileMusic,
-  IconFileText,
   IconFolderOpen,
   IconPlayerPlay,
   IconRocket,
 } from "@tabler/icons-react";
-import { memo, useCallback, useState } from "react";
-import {
-  DEFAULT_DETECTION,
-  pickAudioFile,
-  pickDirectory,
-  pickProjectFile,
-  pickScriptFile,
-} from "../ipc/commands";
+import { useCallback, useState } from "react";
+import { pickAudioFile, pickDirectory, pickProjectFile } from "../ipc/commands";
 import { basename, formatDuration } from "../lib/format";
 import { notifyError } from "../lib/notify";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
 const PROFILE_ROWS: Array<[label: string, value: string]> = [
-  ["Frame", `${DEFAULT_DETECTION.frameMs} ms`],
-  ["Margin", `${DEFAULT_DETECTION.marginDb} dB`],
-  ["Min silence", `${DEFAULT_DETECTION.minSilenceMs} ms`],
-  ["Min clip", `${DEFAULT_DETECTION.minClipMs} ms`],
-  ["Max clip", `${DEFAULT_DETECTION.maxClipMs / 1000} s`],
-  ["Noise floor", `${DEFAULT_DETECTION.noiseFloorPctl}th pctl`],
-  ["Guard", `${DEFAULT_DETECTION.guardMs} ms`],
+  ["Frame", "10 ms"],
+  ["Margin", "20 dB"],
+  ["Min silence", "1500 ms"],
+  ["Min clip", "300 ms"],
+  ["Max clip", "10 s"],
+  ["Noise floor", "10th pctl"],
+  ["Guard", "100 ms"],
 ];
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -54,12 +46,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProjectSidebar() {
+export default function ProjectSidebar() {
   const project = useProjectStore((s) => s.project);
   const busy = useProjectStore((s) => s.busy);
   const exporting = useProjectStore((s) => s.exporting);
   const progress = useProjectStore((s) => s.progress);
-  const pendingScript = useProjectStore((s) => s.pendingScript);
   const projectPath = useProjectStore((s) => s.projectPath);
   const ingestPath = useProjectStore((s) => s.ingestPath);
   const openProject = useProjectStore((s) => s.openProject);
@@ -79,17 +70,6 @@ function ProjectSidebar() {
       if (path) await ingestPath(path);
     } catch (err) {
       notifyError("Could not open recording", err);
-    } finally {
-      refreshGate();
-    }
-  };
-
-  const onPickScript = async (): Promise<void> => {
-    try {
-      const path = await pickScriptFile();
-      if (path) await ingestPath(path);
-    } catch (err) {
-      notifyError("Could not import script", err);
     } finally {
       refreshGate();
     }
@@ -156,11 +136,6 @@ function ProjectSidebar() {
   const activeCount = project
     ? orderedClips(project.clips).filter((c) => c.status !== "rejected").length
     : 0;
-  const lineCount = project
-    ? project.script.filter((l) => !l.skipped).length
-    : 0;
-  const gatePassed =
-    project !== null && lineCount > 0 && activeCount === lineCount;
 
   return (
     <ScrollArea type="auto" h="100%" offsetScrollbars>
@@ -188,16 +163,6 @@ function ProjectSidebar() {
         >
           Import recording
         </Button>
-        <Button
-          leftSection={<IconFileText size={16} />}
-          variant="light"
-          onClick={() => void onPickScript()}
-          loading={busy}
-          disabled={busy || exporting}
-          fullWidth
-        >
-          Import script
-        </Button>
         <Group grow>
           <Button
             leftSection={<IconFolderOpen size={16} />}
@@ -219,13 +184,6 @@ function ProjectSidebar() {
           </Button>
         </Group>
 
-        {pendingScript && (
-          <Alert color="blue" title="Script staged">
-            {pendingScript.length} lines imported — load a recording to begin
-            alignment.
-          </Alert>
-        )}
-
         {busy && (
           <Paper withBorder p="xs">
             <Group justify="space-between" mb={4}>
@@ -237,7 +195,7 @@ function ProjectSidebar() {
               </Text>
             </Group>
             <Progress
-              value={(progress ? progress.pct : 0.1) * 100}
+              value={progress ? progress.pct * 100 : 10}
               animated
               size="sm"
             />
@@ -267,10 +225,10 @@ function ProjectSidebar() {
               </Group>
               <Group justify="space-between">
                 <Text size="xs" c="dimmed">
-                  Clips / lines
+                  Clips
                 </Text>
                 <Text size="xs" ff="monospace">
-                  {activeCount} / {lineCount}
+                  {clipCount}
                   {clipCount !== activeCount
                     ? ` (${clipCount - activeCount} rejected)`
                     : ""}
@@ -282,12 +240,7 @@ function ProjectSidebar() {
                 </Text>
                 <Text size="xs" ff="monospace">
                   {activeClipId
-                    ? (project.script.find(
-                        (l) =>
-                          l.id ===
-                          project.clips.find((c) => c.id === activeClipId)
-                            ?.script_line_id,
-                      )?.script_id ?? "unassigned")
+                    ? `#${project.clips.findIndex((c) => c.id === activeClipId) + 1}`
                     : "—"}
                 </Text>
               </Group>
@@ -303,32 +256,6 @@ function ProjectSidebar() {
               </Alert>
             )}
 
-            <Divider />
-            <SectionLabel>Count gate</SectionLabel>
-            <Paper withBorder p="xs">
-              <Group justify="space-between" mb={4}>
-                <Text size="xs">Clips match script lines</Text>
-                <Badge
-                  color={gatePassed ? "green" : "orange"}
-                  size="xs"
-                  variant="light"
-                >
-                  {gatePassed ? "PASS" : "BLOCKED"}
-                </Badge>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {gatePassed
-                  ? "Export is enabled. Reject, split or merge to fine-tune."
-                  : `${activeCount} active clips vs ${lineCount} script lines — resolve the mismatch before exporting.`}
-              </Text>
-            </Paper>
-
-            {gate && (
-              <Alert color="red" title="Export blocked">
-                {gate}
-              </Alert>
-            )}
-
             <Button
               leftSection={<IconPlayerPlay size={16} />}
               color="green"
@@ -339,6 +266,12 @@ function ProjectSidebar() {
             >
               Export clips
             </Button>
+
+            {gate && (
+              <Alert color="red" title="Export blocked">
+                {gate}
+              </Alert>
+            )}
 
             <Divider />
             <SectionLabel>Processing profile</SectionLabel>
@@ -357,8 +290,7 @@ function ProjectSidebar() {
               </Stack>
             </Paper>
             <Text size="xs" c="dimmed">
-              Detection runs on the conformed master. Adjusting the profile
-              requires re-analysis.
+              Detection runs on the conformed master.
             </Text>
 
             <Divider />
@@ -380,5 +312,3 @@ function ProjectSidebar() {
     </ScrollArea>
   );
 }
-
-export default memo(ProjectSidebar);

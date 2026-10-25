@@ -9,16 +9,16 @@ import {
   Table,
   Text,
 } from "@mantine/core";
-import { memo, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { formatTimecode, samplesToSeconds } from "../lib/format";
 import { waveformBridge } from "../lib/waveformBridge";
-import { type SortKey, useEditorStore } from "../stores/useEditorStore";
+import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
 const statusColor = (status: string): string =>
   status === "approved" ? "green" : status === "rejected" ? "red" : "orange";
 
-function ClipTable() {
+export default function ClipTable() {
   const project = useProjectStore((s) => s.project);
   const setActive = useEditorStore((s) => s.setActive);
   const activeClipId = useEditorStore((s) => s.activeClipId);
@@ -33,7 +33,6 @@ function ClipTable() {
   const clips = useMemo(() => {
     if (!project) return [] as Clip[];
     const ordered = orderedClips(project.clips);
-    const lineById = new Map(project.script.map((l) => [l.id, l]));
     const statusRank: Record<string, number> = {
       proposed: 0,
       approved: 1,
@@ -44,15 +43,6 @@ function ClipTable() {
     const dir = sort.dir === "asc" ? 1 : -1;
     sorted.sort((a, b) => {
       switch (sort.by) {
-        case "script_id": {
-          const la = a.script_line_id
-            ? (lineById.get(a.script_line_id)?.script_id ?? "")
-            : "";
-          const lb = b.script_line_id
-            ? (lineById.get(b.script_line_id)?.script_id ?? "")
-            : "";
-          return la.localeCompare(lb) * dir;
-        }
         case "status":
           return (statusRank[a.status] - statusRank[b.status]) * dir;
         case "duration":
@@ -72,10 +62,6 @@ function ClipTable() {
     return sorted;
   }, [project, sort]);
 
-  const lineFor = (clip: Clip): string | null =>
-    clip.script_line_id ? (clip.script_line_id as string) : null;
-
-  // Keep the active row in view.
   useEffect(() => {
     if (!activeClipId) return;
     rowRefs.current.get(activeClipId)?.scrollIntoView({ block: "nearest" });
@@ -93,7 +79,7 @@ function ClipTable() {
 
   const headerCell = (
     label: string,
-    key: SortKey,
+    key: "index" | "status" | "duration",
     align?: "left" | "right",
   ) => (
     <Table.Th
@@ -102,7 +88,7 @@ function ClipTable() {
         textAlign: align ?? "left",
         userSelect: "none",
       }}
-      onClick={() => setSort(key)}
+      onClick={() => setSort(key as "index" | "status" | "duration")}
     >
       <Group
         gap={4}
@@ -156,21 +142,15 @@ function ClipTable() {
             <Table.Tr>
               <Table.Th style={{ width: 34 }} />
               <Table.Th style={{ width: 40 }}>#</Table.Th>
-              {headerCell("ID", "script_id")}
               {headerCell("Status", "status")}
               {headerCell("Start", "index", "right")}
               <Table.Th style={{ textAlign: "right" }}>End</Table.Th>
               {headerCell("Dur", "duration", "right")}
               <Table.Th style={{ width: 90 }}>Flags</Table.Th>
-              <Table.Th>Text</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {clips.map((clip, index) => {
-              const line = lineFor(clip);
-              const scriptLine = line
-                ? (project.script.find((l) => l.id === line) ?? null)
-                : null;
               const flags = clip.flags ?? [];
               return (
                 <Table.Tr
@@ -206,11 +186,6 @@ function ClipTable() {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Text size="xs" ff="monospace">
-                      {scriptLine ? scriptLine.script_id : "—"}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
                     <Badge
                       size="xs"
                       color={statusColor(clip.status)}
@@ -240,11 +215,6 @@ function ClipTable() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap={2}>
-                      {clip.anchored && (
-                        <Badge size="xs" color="grape" variant="dot">
-                          A
-                        </Badge>
-                      )}
                       {flags.map((f) => (
                         <Badge
                           key={f}
@@ -257,15 +227,6 @@ function ClipTable() {
                       ))}
                     </Group>
                   </Table.Td>
-                  <Table.Td>
-                    <Text
-                      size="xs"
-                      lineClamp={1}
-                      c={scriptLine ? undefined : "red"}
-                    >
-                      {scriptLine ? scriptLine.text : "unassigned"}
-                    </Text>
-                  </Table.Td>
                 </Table.Tr>
               );
             })}
@@ -275,7 +236,3 @@ function ClipTable() {
     </Stack>
   );
 }
-
-// No props: memo keeps the 500-row body from re-rendering when the parent
-// ticks the playhead 60 times a second during playback.
-export default memo(ClipTable);

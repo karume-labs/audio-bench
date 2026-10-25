@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SortKey = "index" | "script_id" | "status" | "duration";
+export type SortKey = "index" | "status" | "duration";
 
 interface EditorStore {
   /** Currently inspected clip (drives inspector, regions, keyboard ops). */

@@ -6,14 +6,12 @@ import {
   Divider,
   Group,
   Kbd,
-  Paper,
   ScrollArea,
   SimpleGrid,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { memo } from "react";
 import { formatTimecode, samplesToSeconds } from "../lib/format";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
@@ -38,11 +36,9 @@ function Field({
   );
 }
 
-function ClipInspector() {
+export default function ClipInspector() {
   const project = useProjectStore((s) => s.project);
   const setClipStatus = useProjectStore((s) => s.setClipStatus);
-  const toggleAnchorOp = useProjectStore((s) => s.toggleAnchorOp);
-  const skipLine = useProjectStore((s) => s.skipLine);
   const mergeActiveWithNext = useProjectStore((s) => s.mergeActiveWithNext);
   const splitClipAt = useProjectStore((s) => s.splitClipAt);
 
@@ -66,9 +62,6 @@ function ClipInspector() {
     );
   }
 
-  const line = clip.script_line_id
-    ? (project.script.find((l) => l.id === clip.script_line_id) ?? null)
-    : null;
   const durationSamples = project.source.duration_samples ?? 0;
   const win = createExportWindow(
     clip.core_start_sample,
@@ -83,10 +76,10 @@ function ClipInspector() {
         <Group justify="space-between" align="flex-start">
           <div>
             <Text size="xs" c="dimmed">
-              Script ID
+              Clip
             </Text>
             <Title order={2} ff="monospace">
-              {line ? line.script_id : "—"}
+              #{project.clips.findIndex((c) => c.id === clip.id) + 1}
             </Title>
           </div>
           <Badge color={statusColor(clip.status)} size="lg" variant="light">
@@ -94,29 +87,10 @@ function ClipInspector() {
           </Badge>
         </Group>
 
-        <Paper withBorder p="xs">
-          <Text size="xs" c="dimmed" mb={4}>
-            Expected text
-          </Text>
-          <Text size="sm">{line ? line.text : "No script line assigned"}</Text>
-        </Paper>
-
-        {flags.includes("duration_outlier") && (
-          <Alert color="red" title="Duration outlier">
-            This clip's length doesn't match the expected reading speed for its
-            text — check for a missed split or merged take.
-          </Alert>
-        )}
         {flags.includes("edge_clamped") && (
           <Alert color="yellow" title="Edge clamped">
             The export window runs into the recording edge — silence will be
             padded to guarantee the full 5s lead-in/out.
-          </Alert>
-        )}
-        {!line && (
-          <Alert color="orange" title="Unassigned">
-            No script line for this clip. Use Skip ID on a line, or split/merge
-            to re-align.
           </Alert>
         )}
 
@@ -136,7 +110,6 @@ function ClipInspector() {
             value={`${((clip.core_end_sample - clip.core_start_sample) / 48000).toFixed(3)}s`}
             mono
           />
-          <Field label="Anchor" value={clip.anchored ? "locked" : "free"} />
           <Field
             label="Export window"
             value={`${formatTimecode(samplesToSeconds(win.window.export_start))} → ${formatTimecode(
@@ -183,22 +156,6 @@ function ClipInspector() {
         <Group gap="xs">
           <Button
             size="xs"
-            variant={clip.anchored ? "filled" : "outline"}
-            color="grape"
-            onClick={() => toggleAnchorOp(clip.id)}
-          >
-            {clip.anchored ? "Unanchor (L)" : "Anchor (L)"}
-          </Button>
-          <Button
-            size="xs"
-            variant="light"
-            onClick={() => line && skipLine(line.id)}
-            disabled={!line}
-          >
-            Skip line (K)
-          </Button>
-          <Button
-            size="xs"
             variant="light"
             onClick={() => mergeActiveWithNext(clip.id)}
           >
@@ -208,8 +165,6 @@ function ClipInspector() {
             size="xs"
             variant="light"
             onClick={() =>
-              // Read the playhead lazily: subscribing here would re-render the
-              // inspector on every timeupdate tick during playback.
               splitClipAt(
                 Math.round(useEditorStore.getState().playhead * 48_000),
               )
@@ -254,5 +209,3 @@ function ClipInspector() {
     </ScrollArea>
   );
 }
-
-export default memo(ClipInspector);

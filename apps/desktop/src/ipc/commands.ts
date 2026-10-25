@@ -68,12 +68,6 @@ export interface Peaks {
   negative: number[];
 }
 
-export interface ScriptRow {
-  rowNumber: number;
-  id: string;
-  text: string;
-}
-
 export interface ExportClip {
   filename: string;
   coreStartSample: number;
@@ -109,9 +103,6 @@ export const analyzeRecording = (
 export const generatePeaks = (masterPath: string, width: number) =>
   call<Peaks>("generate_peaks", { masterPath, width });
 
-export const importScriptRows = (path: string) =>
-  call<ScriptRow[]>("import_script", { path });
-
 export const loadProjectFile = (path: string) =>
   call<unknown | null>("load_project", { path });
 
@@ -134,16 +125,6 @@ export const pickAudioFile = (): Promise<string | null> =>
         name: "Audio",
         extensions: ["wav", "flac", "mp3", "m4a", "aac", "ogg"],
       },
-      { name: "All files", extensions: ["*"] },
-    ],
-  });
-
-export const pickScriptFile = (): Promise<string | null> =>
-  open({
-    multiple: false,
-    title: "Choose a reference script",
-    filters: [
-      { name: "Script", extensions: ["csv", "txt", "xlsx"] },
       { name: "All files", extensions: ["*"] },
     ],
   });

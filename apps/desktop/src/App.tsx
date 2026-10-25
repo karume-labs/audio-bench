@@ -98,7 +98,7 @@ export default function App() {
   const onDropHint = (): void => {
     notifyInfo(
       "Drop files here",
-      "Drag an audio file, a script (.csv/.txt/.xlsx) or a .audiobench project anywhere in this window.",
+      "Drag an audio file or a .audiobench project anywhere in this window.",
     );
   };
 

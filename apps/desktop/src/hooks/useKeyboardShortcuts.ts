@@ -4,7 +4,6 @@ import { waveformBridge } from "../lib/waveformBridge";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
-/** True when the event originated from a text-entry surface. */
 const isTypingTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
@@ -12,19 +11,6 @@ const isTypingTarget = (target: EventTarget | null): boolean => {
   return target.isContentEditable;
 };
 
-/**
- * PRD §6 keyboard workflow:
- *
- *   Space        play / pause
- *   Shift+Space  audition the active clip's export window
- *   ↑ / ↓        previous / next clip (seeks the playhead there)
- *   S            split active clip at playhead
- *   M            merge active clip with the next one
- *   A            approve active clip
- *   R            reject active clip
- *   K            skip the active clip's script line
- *   L            anchor / unanchor the active clip
- */
 export const useKeyboardShortcuts = (): void => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -43,7 +29,6 @@ export const useKeyboardShortcuts = (): void => {
         case "Spacebar": {
           e.preventDefault();
           if (e.shiftKey) {
-            // Audition the padded export window (built-in stop-at on ws.play).
             waveformBridge.actions?.playExportWindow();
           } else {
             waveformBridge.actions?.togglePlay();
@@ -91,14 +76,6 @@ export const useKeyboardShortcuts = (): void => {
         case "r":
           e.preventDefault();
           project.setClipStatus(activeId, "rejected");
-          break;
-        case "k":
-          e.preventDefault();
-          if (clip.script_line_id) project.skipLine(clip.script_line_id);
-          break;
-        case "l":
-          e.preventDefault();
-          project.toggleAnchorOp(activeId);
           break;
         default:
           break;
