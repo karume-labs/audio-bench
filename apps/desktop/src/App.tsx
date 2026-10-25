@@ -168,7 +168,7 @@ export default function App() {
               >
                 <Group gap="xs" wrap="nowrap">
                   <img
-                    src="/logo.jpg"
+                    src="/logo.png"
                     alt="audio-bench logo"
                     width={24}
                     height={24}
@@ -343,7 +343,7 @@ export default function App() {
           }}
         >
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="audio-bench"
             width={96}
             height={96}
