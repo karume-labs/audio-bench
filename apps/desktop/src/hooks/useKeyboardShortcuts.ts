@@ -15,9 +15,26 @@ export const useKeyboardShortcuts = (): void => {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
       if (isTypingTarget(e.target)) return;
+      const project = useProjectStore.getState();
+      // Allow Ctrl/Cmd+Z and Ctrl/Cmd+Y even though we otherwise ignore modifiers.
+      const mod = e.ctrlKey || e.metaKey;
+      if (
+        mod &&
+        (e.key === "z" || e.key === "y" || e.key === "Z" || e.key === "Y")
+      ) {
+        e.preventDefault();
+        if (e.key.toLowerCase() === "z" && !e.shiftKey) {
+          project.undo();
+        } else if (
+          e.key.toLowerCase() === "y" ||
+          (e.key.toLowerCase() === "z" && e.shiftKey)
+        ) {
+          project.redo();
+        }
+        return;
+      }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-      const project = useProjectStore.getState();
       const editor = useEditorStore.getState();
       const orderedIds = project.project
         ? orderedClips(project.project.clips).map((c) => c.id)

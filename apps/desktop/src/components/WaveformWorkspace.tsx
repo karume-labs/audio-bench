@@ -1,4 +1,5 @@
 import { Alert, Center, Group, Loader, Stack, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { memo, useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
@@ -28,6 +29,11 @@ function WaveformWorkspace() {
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const waveHeight = isMobile ? 150 : 220;
+  const waveHeightRef = useRef(waveHeight);
+  waveHeightRef.current = waveHeight;
+
   const project = useProjectStore((s) => s.project);
   const masterPath = project?.source.master_path ?? null;
   const durationSamples = project?.source.duration_samples ?? 0;
@@ -35,7 +41,6 @@ function WaveformWorkspace() {
   const activeClipId = useEditorStore((s) => s.activeClipId);
   const zoom = useEditorStore((s) => s.zoom);
 
-  // ---- Create the wavesurfer instance when the master changes ----
   useEffect(() => {
     if (!masterPath || !containerRef.current) return;
     const container = containerRef.current;
@@ -51,7 +56,7 @@ function WaveformWorkspace() {
 
       const ws = WaveSurfer.create({
         container,
-        height: 220,
+        height: waveHeightRef.current,
         url: convertFileSrc(masterPath),
         peaks: [peaks.positive],
         duration: durationSamples / SAMPLE_RATE,
@@ -236,7 +241,7 @@ function WaveformWorkspace() {
           </Group>
         )}
       </Group>
-      <div ref={containerRef} style={{ minHeight: 220 }} />
+      <div ref={containerRef} style={{ minHeight: waveHeight }} />
     </Stack>
   );
 }

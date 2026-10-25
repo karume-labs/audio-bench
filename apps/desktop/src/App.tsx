@@ -1,6 +1,10 @@
 import {
+  ActionIcon,
   AppShell,
   Badge,
+  Burger,
+  Button,
+  Drawer,
   Group,
   Kbd,
   Loader,
@@ -9,8 +13,13 @@ import {
   Title,
   UnstyledButton,
 } from "@mantine/core";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { nprogress } from "@mantine/nprogress";
-import { IconUpload } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconUpload,
+} from "@tabler/icons-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useEffect } from "react";
 import ClipInspector from "./components/ClipInspector";
@@ -22,13 +31,20 @@ import { isTauri } from "./ipc/commands";
 import { onAnalysisProgress } from "./ipc/events";
 import { formatTimecode } from "./lib/format";
 import { notifyError, notifyInfo } from "./lib/notify";
+import { ensureNotificationPermission } from "./lib/osNotify";
 import { useEditorStore } from "./stores/useEditorStore";
 import { useProjectStore } from "./stores/useProjectStore";
 
-const TABLE_HEIGHT = 244;
-
 export default function App() {
   useKeyboardShortcuts();
+
+  const [navbarOpened, { toggle: toggleNavbar }] = useDisclosure(false);
+  const [inspectorOpened, { open: openInspector, close: closeInspector }] =
+    useDisclosure(false);
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const tableHeight = isMobile ? 180 : 244;
+  const headerHeight = 52;
 
   const busy = useProjectStore((s) => s.busy);
   const exporting = useProjectStore((s) => s.exporting);
@@ -36,19 +52,25 @@ export default function App() {
   const project = useProjectStore((s) => s.project);
   const ingestPath = useProjectStore((s) => s.ingestPath);
   const setProgress = useProjectStore((s) => s.setProgress);
+  const undo = useProjectStore((s) => s.undo);
+  const redo = useProjectStore((s) => s.redo);
+  const canUndo = useProjectStore((s) => s.undoStack.length > 0);
+  const canRedo = useProjectStore((s) => s.redoStack.length > 0);
 
   const playhead = useEditorStore((s) => s.playhead);
   const playing = useEditorStore((s) => s.playing);
   const playingWindow = useEditorStore((s) => s.playingWindow);
 
-  // ---- Backend progress -> notification center + top progress bar ----
+  useEffect(() => {
+    void ensureNotificationPermission();
+  }, []);
+
   useEffect(() => {
     let unlisten: (() => void) | undefined;
     let cancelled = false;
 
     void onAnalysisProgress((p) => {
       setProgress(p);
-      // nprogress.set() takes 0..100; backend pct arrives as 0..1.
       nprogress.set(Math.max(0, Math.min(1, p.pct)) * 100);
     }).then((fn) => {
       if (cancelled) fn();
@@ -62,15 +84,11 @@ export default function App() {
     };
   }, [setProgress]);
 
-  // ---- Busy/exporting -> mount or retire the top progress bar.
-  // Kept separate from the exact-percentage effect above: nprogress.start()
-  // self-increments, so it must only run when the flag *changes*.
   useEffect(() => {
     if (busy || exporting) nprogress.start();
     else nprogress.complete();
   }, [busy, exporting]);
 
-  // ---- Native drag & drop routing (Tauri webview, not HTML5) ----
   useEffect(() => {
     if (!isTauri()) return;
     let disposed = false;
@@ -98,28 +116,35 @@ export default function App() {
   const onDropHint = (): void => {
     notifyInfo(
       "Drop files here",
-      "Drag an audio file or a .audiobench project anywhere in this window.",
+      "Drop an audio file or a .audiobench project anywhere in this window.",
     );
   };
 
   return (
     <AppShell
-      header={{ height: 52 }}
+      header={{ height: headerHeight }}
       navbar={{
         width: 288,
         breakpoint: "sm",
-        collapsed: { desktop: false, mobile: true },
+        collapsed: { mobile: !navbarOpened, desktop: false },
       }}
       aside={{
         width: 336,
-        breakpoint: "lg",
-        collapsed: { desktop: false, mobile: true },
+        breakpoint: "md",
+        collapsed: { mobile: true, desktop: false },
       }}
       padding={0}
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <Group gap="sm" wrap="nowrap">
+            <Burger
+              opened={navbarOpened}
+              onClick={toggleNavbar}
+              hiddenFrom="sm"
+              size="sm"
+              aria-label="Toggle sidebar"
+            />
             <UnstyledButton
               onClick={onDropHint}
               title="Drop files anywhere to import"
@@ -130,7 +155,7 @@ export default function App() {
               </Group>
             </UnstyledButton>
             {project && (
-              <Badge size="sm" variant="light" color="gray">
+              <Badge size="sm" variant="light" color="gray" visibleFrom="sm">
                 24-bit · 48 kHz · mono
               </Badge>
             )}
@@ -140,7 +165,7 @@ export default function App() {
             {(busy || exporting) && (
               <Group gap="xs" wrap="nowrap">
                 <Loader size="xs" />
-                <Text size="xs" c="dimmed">
+                <Text size="xs" c="dimmed" visibleFrom="sm">
                   {progress
                     ? progress.message
                     : exporting
@@ -163,6 +188,36 @@ export default function App() {
                 </Text>
               </Group>
             )}
+            {project && (
+              <Group gap="xs" wrap="nowrap">
+                <ActionIcon
+                  variant="light"
+                  size="sm"
+                  disabled={!canUndo}
+                  onClick={() => undo()}
+                  title="Undo (Ctrl+Z)"
+                >
+                  <IconArrowBackUp size={16} />
+                </ActionIcon>
+                <ActionIcon
+                  variant="light"
+                  size="sm"
+                  disabled={!canRedo}
+                  onClick={() => redo()}
+                  title="Redo (Ctrl+Y)"
+                >
+                  <IconArrowForwardUp size={16} />
+                </ActionIcon>
+                <Button
+                  size="xs"
+                  variant="light"
+                  hiddenFrom="md"
+                  onClick={openInspector}
+                >
+                  Inspector
+                </Button>
+              </Group>
+            )}
             <Group gap={6} visibleFrom="md">
               <Kbd size="xs">Space</Kbd>
               <Kbd size="xs">↑↓</Kbd>
@@ -183,16 +238,11 @@ export default function App() {
       </AppShell.Aside>
 
       <AppShell.Main>
-        <Stack
-          gap={0}
-          style={{
-            minHeight: "calc(100vh - 52px)",
-          }}
-        >
+        <Stack gap={0} style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}>
           <div
             style={{
-              height: `calc(100vh - 52px - ${TABLE_HEIGHT}px)`,
-              minHeight: 260,
+              height: `calc(100vh - ${headerHeight}px - ${tableHeight}px)`,
+              minHeight: 200,
               display: "flex",
               flexDirection: "column",
             }}
@@ -202,7 +252,7 @@ export default function App() {
 
           <div
             style={{
-              height: TABLE_HEIGHT,
+              height: tableHeight,
               borderTop: "1px solid var(--mantine-color-default-border)",
               overflow: "hidden",
             }}
@@ -211,6 +261,18 @@ export default function App() {
           </div>
         </Stack>
       </AppShell.Main>
+
+      {/* Mobile inspector drawer (aside is collapsed on small screens) */}
+      <Drawer
+        opened={inspectorOpened}
+        onClose={closeInspector}
+        position="right"
+        size="85%"
+        title="Clip inspector"
+        hiddenFrom="md"
+      >
+        <ClipInspector />
+      </Drawer>
     </AppShell>
   );
 }

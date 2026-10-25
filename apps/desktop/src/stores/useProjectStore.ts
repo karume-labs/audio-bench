@@ -30,7 +30,8 @@ import {
   extname,
   formatDuration,
 } from "../lib/format";
-import { notifyError, notifySuccess } from "../lib/notify";
+import { notifyError, notifyInfo, notifySuccess } from "../lib/notify";
+import { notifyOsIfUnfocused } from "../lib/osNotify";
 import { useEditorStore } from "./useEditorStore";
 
 const newUuid = (): string => globalThis.crypto.randomUUID();
@@ -64,6 +65,8 @@ interface ProjectStore {
   busy: boolean;
   exporting: boolean;
   progress: AnalysisProgress | null;
+  undoStack: Project[];
+  redoStack: Project[];
 
   setProgress: (p: AnalysisProgress | null) => void;
   ingestPath: (path: string) => Promise<void>;
@@ -72,6 +75,9 @@ interface ProjectStore {
   saveProject: (announce?: boolean) => Promise<void>;
   exportBlockers: () => string | null;
   executeExport: (outDir: string) => Promise<void>;
+
+  undo: () => void;
+  redo: () => void;
 
   splitClipAt: (sample: number) => void;
   mergeActiveWithNext: (clipId: string) => void;
@@ -94,12 +100,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
   const commit = (next: { clips?: Clip[] }, announce?: string): void => {
     const current = get().project;
     if (!current) return;
+    // Push current state onto the undo stack before mutating.
+    const undoStack = [...get().undoStack, structuredClone(current)];
     const project: Project = {
       ...current,
       clips: next.clips ?? current.clips,
     };
     const clips = withFlags(project, project.clips);
-    set({ project: { ...project, clips } });
+    set({ project: { ...project, clips }, undoStack, redoStack: [] });
     void persist();
     if (announce) notifySuccess("Updated", announce);
   };
@@ -110,6 +118,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     busy: false,
     exporting: false,
     progress: null,
+    undoStack: [],
+    redoStack: [],
 
     setProgress: (p) => set({ progress: p }),
 
@@ -158,6 +168,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           projectPath: deriveProjectPath(result.source.originalPath),
           busy: false,
           progress: null,
+          undoStack: [],
+          redoStack: [],
         });
 
         const editor = useEditorStore.getState();
@@ -169,9 +181,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           "Analysis complete",
           `${clips.length} clips from ${formatDuration(result.source.durationSeconds)} of audio.`,
         );
+        void notifyOsIfUnfocused(
+          "Analysis complete",
+          `${clips.length} clips ready for review.`,
+        );
       } catch (err) {
         set({ busy: false, progress: null });
         notifyError("Analysis failed", err);
+        void notifyOsIfUnfocused("Analysis failed", "See the app for details.");
       }
     },
 
@@ -180,7 +197,14 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
         const raw = await loadProjectFile(path);
         if (raw === null) throw new Error(`Project not found: ${path}`);
         const project = projectSchema.parse(raw);
-        set({ project, projectPath: path, busy: false, progress: null });
+        set({
+          project,
+          projectPath: path,
+          busy: false,
+          progress: null,
+          undoStack: [],
+          redoStack: [],
+        });
         const editor = useEditorStore.getState();
         editor.setActive(orderedClips(project.clips)[0]?.id ?? null);
         editor.setChecked([]);
@@ -267,8 +291,13 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           "Export complete",
           `Wrote ${result.writtenFiles} clips + manifest.csv + alignment_report.csv to ${result.outDir}`,
         );
+        void notifyOsIfUnfocused(
+          "Export complete",
+          `${result.writtenFiles} clips written to ${result.outDir}.`,
+        );
       } catch (err) {
         notifyError("Export failed", err);
+        void notifyOsIfUnfocused("Export failed", "See the app for details.");
       } finally {
         set({ exporting: false });
       }
@@ -322,6 +351,38 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
       );
       commit({ clips }, `Approved ${checked.size} clip(s)`);
       useEditorStore.getState().setChecked([]);
+    },
+
+    undo: () => {
+      const { project, undoStack } = get();
+      if (!project || undoStack.length === 0) {
+        notifyInfo("Undo", "Nothing to undo");
+        return;
+      }
+      const previous = undoStack[undoStack.length - 1];
+      const redoStack = [...get().redoStack, structuredClone(project)];
+      set({
+        project: structuredClone(previous),
+        undoStack: undoStack.slice(0, -1),
+        redoStack,
+      });
+      void persist();
+    },
+
+    redo: () => {
+      const { project, redoStack } = get();
+      if (!project || redoStack.length === 0) {
+        notifyInfo("Redo", "Nothing to redo");
+        return;
+      }
+      const next = redoStack[redoStack.length - 1];
+      const undoStack = [...get().undoStack, structuredClone(project)];
+      set({
+        project: structuredClone(next),
+        undoStack,
+        redoStack: redoStack.slice(0, -1),
+      });
+      void persist();
     },
   };
 });
