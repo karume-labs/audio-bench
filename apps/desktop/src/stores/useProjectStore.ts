@@ -59,7 +59,12 @@ const withFlags = (project: Project, clips: Clip[]): Clip[] => {
       ? (project.script.find((l) => l.id === c.script_line_id) ?? null)
       : null;
     const flags: ClipFlag[] = [];
-    if (c.core_start_sample <= 0 || c.core_end_sample >= durationSamples) {
+    // PRD §8.1: edge_clamped when the 5s export window runs past the recording.
+    const padSamples = 5 * 48000;
+    if (
+      c.core_start_sample < padSamples ||
+      c.core_end_sample + padSamples > durationSamples
+    ) {
       flags.push("edge_clamped");
     }
     if (line && c.status !== "rejected") {
@@ -171,7 +176,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           script_line_id: null,
           status: "proposed",
           anchored: false,
-          flags: c.edgeClamped ? ["edge_clamped"] : [],
+          flags: [],
         }));
 
         const project = projectSchema.parse({
