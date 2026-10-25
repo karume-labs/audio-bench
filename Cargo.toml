@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "apps/backend",
+    "crates/audio-core",
+]
+resolver = "2"
+
+# Release profile shared by the whole workspace (Cargo ignores profiles
+# declared in non-root workspace members).
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

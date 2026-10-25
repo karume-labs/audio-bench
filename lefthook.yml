@@ -1,0 +1,7 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome-check:
+      run: bun x @biomejs/biome check --staged
+    cargo-check:
+      run: cargo check --workspace
