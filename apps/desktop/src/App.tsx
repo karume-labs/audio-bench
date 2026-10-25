@@ -15,13 +15,9 @@ import {
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { nprogress } from "@mantine/nprogress";
-import {
-  IconArrowBackUp,
-  IconArrowForwardUp,
-  IconUpload,
-} from "@tabler/icons-react";
+import { IconArrowBackUp, IconArrowForwardUp } from "@tabler/icons-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ClipInspector from "./components/ClipInspector";
 import ClipTable from "./components/ClipTable";
 import ProjectSidebar from "./components/ProjectSidebar";
@@ -37,6 +33,12 @@ import { useProjectStore } from "./stores/useProjectStore";
 
 export default function App() {
   useKeyboardShortcuts();
+
+  const [splashVisible, setSplashVisible] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setSplashVisible(false), 1500);
+    return () => clearTimeout(t);
+  }, []);
 
   const [navbarOpened, { toggle: toggleNavbar }] = useDisclosure(false);
   const [inspectorOpened, { open: openInspector, close: closeInspector }] =
@@ -121,148 +123,158 @@ export default function App() {
   };
 
   return (
-    <AppShell
-      header={{ height: headerHeight }}
-      navbar={{
-        width: 288,
-        breakpoint: "sm",
-        collapsed: { mobile: !navbarOpened, desktop: false },
-      }}
-      aside={{
-        width: 336,
-        breakpoint: "md",
-        collapsed: { mobile: true, desktop: false },
-      }}
-      padding={0}
-    >
-      <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group gap="sm" wrap="nowrap">
-            <Burger
-              opened={navbarOpened}
-              onClick={toggleNavbar}
-              hiddenFrom="sm"
-              size="sm"
-              aria-label="Toggle sidebar"
-            />
-            <UnstyledButton
-              onClick={onDropHint}
-              title="Drop files anywhere to import"
-            >
-              <Group gap="xs" wrap="nowrap">
-                <IconUpload size={18} stroke={1.7} />
-                <Title order={5}>Audio Workbench</Title>
-              </Group>
-            </UnstyledButton>
-            {project && (
-              <Badge size="sm" variant="light" color="gray" visibleFrom="sm">
-                24-bit · 48 kHz · mono
-              </Badge>
-            )}
-          </Group>
-
-          <Group gap="md" wrap="nowrap">
-            {(busy || exporting) && (
-              <Group gap="xs" wrap="nowrap">
-                <Loader size="xs" />
-                <Text size="xs" c="dimmed" visibleFrom="sm">
-                  {progress
-                    ? progress.message
-                    : exporting
-                      ? "Exporting…"
-                      : "Analyzing…"}
-                </Text>
-              </Group>
-            )}
-            {project && (
-              <Group gap="xs" wrap="nowrap">
-                <Badge
-                  size="sm"
-                  variant="dot"
-                  color={playingWindow ? "grape" : playing ? "green" : "gray"}
-                >
-                  {playingWindow ? "window" : playing ? "playing" : "stopped"}
+    <div style={{ display: "contents" }}>
+      <AppShell
+        header={{ height: headerHeight }}
+        navbar={{
+          width: 288,
+          breakpoint: "sm",
+          collapsed: { mobile: !navbarOpened, desktop: false },
+        }}
+        aside={{
+          width: 336,
+          breakpoint: "md",
+          collapsed: { mobile: true, desktop: false },
+        }}
+        padding={0}
+      >
+        <AppShell.Header>
+          <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+            <Group gap="sm" wrap="nowrap">
+              <Burger
+                opened={navbarOpened}
+                onClick={toggleNavbar}
+                hiddenFrom="sm"
+                size="sm"
+                aria-label="Toggle sidebar"
+              />
+              <UnstyledButton
+                onClick={onDropHint}
+                title="Drop files anywhere to import"
+              >
+                <Group gap="xs" wrap="nowrap">
+                  <img
+                    src="/logo.jpg"
+                    alt="audio-bench logo"
+                    width={24}
+                    height={24}
+                    style={{ borderRadius: 4, display: "block" }}
+                  />
+                  <Title order={5}>audio-bench</Title>
+                </Group>
+              </UnstyledButton>
+              {project && (
+                <Badge size="sm" variant="light" color="gray" visibleFrom="sm">
+                  24-bit · 48 kHz · mono
                 </Badge>
-                <Text size="sm" ff="monospace">
-                  {formatTimecode(playhead)}
-                </Text>
+              )}
+            </Group>
+
+            <Group gap="md" wrap="nowrap">
+              {(busy || exporting) && (
+                <Group gap="xs" wrap="nowrap">
+                  <Loader size="xs" />
+                  <Text size="xs" c="dimmed" visibleFrom="sm">
+                    {progress
+                      ? progress.message
+                      : exporting
+                        ? "Exporting…"
+                        : "Analyzing…"}
+                  </Text>
+                </Group>
+              )}
+              {project && (
+                <Group gap="xs" wrap="nowrap">
+                  <Badge
+                    size="sm"
+                    variant="dot"
+                    color={playingWindow ? "grape" : playing ? "green" : "gray"}
+                  >
+                    {playingWindow ? "window" : playing ? "playing" : "stopped"}
+                  </Badge>
+                  <Text size="sm" ff="monospace">
+                    {formatTimecode(playhead)}
+                  </Text>
+                </Group>
+              )}
+              {project && (
+                <Group gap="xs" wrap="nowrap">
+                  <ActionIcon
+                    variant="light"
+                    size="sm"
+                    disabled={!canUndo}
+                    onClick={() => undo()}
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <IconArrowBackUp size={16} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="light"
+                    size="sm"
+                    disabled={!canRedo}
+                    onClick={() => redo()}
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <IconArrowForwardUp size={16} />
+                  </ActionIcon>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    hiddenFrom="md"
+                    onClick={openInspector}
+                  >
+                    Inspector
+                  </Button>
+                </Group>
+              )}
+              <Group gap={6} visibleFrom="md">
+                <Kbd size="xs">Space</Kbd>
+                <Kbd size="xs">↑↓</Kbd>
+                <Kbd size="xs">S</Kbd>
+                <Kbd size="xs">M</Kbd>
+                <Kbd size="xs">A</Kbd>
               </Group>
-            )}
-            {project && (
-              <Group gap="xs" wrap="nowrap">
-                <ActionIcon
-                  variant="light"
-                  size="sm"
-                  disabled={!canUndo}
-                  onClick={() => undo()}
-                  title="Undo (Ctrl+Z)"
-                >
-                  <IconArrowBackUp size={16} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="light"
-                  size="sm"
-                  disabled={!canRedo}
-                  onClick={() => redo()}
-                  title="Redo (Ctrl+Y)"
-                >
-                  <IconArrowForwardUp size={16} />
-                </ActionIcon>
-                <Button
-                  size="xs"
-                  variant="light"
-                  hiddenFrom="md"
-                  onClick={openInspector}
-                >
-                  Inspector
-                </Button>
-              </Group>
-            )}
-            <Group gap={6} visibleFrom="md">
-              <Kbd size="xs">Space</Kbd>
-              <Kbd size="xs">↑↓</Kbd>
-              <Kbd size="xs">S</Kbd>
-              <Kbd size="xs">M</Kbd>
-              <Kbd size="xs">A</Kbd>
             </Group>
           </Group>
-        </Group>
-      </AppShell.Header>
+        </AppShell.Header>
 
-      <AppShell.Navbar p={0}>
-        <ProjectSidebar />
-      </AppShell.Navbar>
+        <AppShell.Navbar p={0}>
+          <ProjectSidebar />
+        </AppShell.Navbar>
 
-      <AppShell.Aside p={0}>
-        <ClipInspector />
-      </AppShell.Aside>
+        <AppShell.Aside p={0}>
+          <ClipInspector />
+        </AppShell.Aside>
 
-      <AppShell.Main>
-        <Stack gap={0} style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}>
-          <div
-            style={{
-              height: `calc(100vh - ${headerHeight}px - ${tableHeight}px)`,
-              minHeight: 200,
-              display: "flex",
-              flexDirection: "column",
-            }}
+        <AppShell.Main>
+          <Stack
+            gap={0}
+            style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}
           >
-            <WaveformWorkspace />
-          </div>
+            <div
+              style={{
+                height: `calc(100vh - ${headerHeight}px - ${tableHeight}px)`,
+                minHeight: 200,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <WaveformWorkspace />
+            </div>
 
-          <div
-            style={{
-              height: tableHeight,
-              borderTop: "1px solid var(--mantine-color-default-border)",
-              overflow: "hidden",
-            }}
-          >
-            <ClipTable />
-          </div>
-        </Stack>
-      </AppShell.Main>
+            <div
+              style={{
+                height: tableHeight,
+                borderTop: "1px solid var(--mantine-color-default-border)",
+                overflow: "hidden",
+              }}
+            >
+              <ClipTable />
+            </div>
+          </Stack>
+        </AppShell.Main>
+      </AppShell>
 
-      {/* Mobile inspector drawer (aside is collapsed on small screens) */}
       <Drawer
         opened={inspectorOpened}
         onClose={closeInspector}
@@ -273,6 +285,42 @@ export default function App() {
       >
         <ClipInspector />
       </Drawer>
-    </AppShell>
+
+      {/* Splash screen */}
+      {splashVisible && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            background: "var(--mantine-color-dark-7)",
+            transition: "opacity 300ms ease-out",
+            opacity: splashVisible ? 1 : 0,
+          }}
+        >
+          <img
+            src="/logo.jpg"
+            alt="audio-bench"
+            width={96}
+            height={96}
+            style={{ borderRadius: 16, display: "block" }}
+          />
+          <Title
+            order={2}
+            style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700 }}
+          >
+            audio-bench
+          </Title>
+          <Text size="sm" c="dimmed">
+            Audio workstation
+          </Text>
+        </div>
+      )}
+    </div>
   );
 }

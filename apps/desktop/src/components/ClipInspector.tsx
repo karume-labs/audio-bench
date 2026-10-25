@@ -16,8 +16,10 @@ import { formatTimecode, samplesToSeconds } from "../lib/format";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
+import { CLIP_STATUS_COLOR } from "../theme";
+
 const statusColor = (status: string): string =>
-  status === "approved" ? "green" : status === "rejected" ? "red" : "orange";
+  CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
 
 function Field({
   label,

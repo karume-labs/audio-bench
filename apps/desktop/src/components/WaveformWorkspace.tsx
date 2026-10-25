@@ -10,6 +10,7 @@ import { SAMPLE_RATE, samplesToSeconds } from "../lib/format";
 import { waveformBridge } from "../lib/waveformBridge";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
+import { WAVEFORM_COLORS } from "../theme";
 
 const EXPORT_REGION_ID = "__export_window__";
 
@@ -60,9 +61,9 @@ function WaveformWorkspace() {
         url: convertFileSrc(masterPath),
         peaks: [peaks.positive],
         duration: durationSamples / SAMPLE_RATE,
-        waveColor: "#4b5563",
-        progressColor: "#2563eb",
-        cursorColor: "#f8fafc",
+        waveColor: WAVEFORM_COLORS.wave,
+        progressColor: WAVEFORM_COLORS.wave,
+        cursorColor: WAVEFORM_COLORS.cursor,
         cursorWidth: 2,
         fillParent: true,
         dragToSeek: true,
@@ -159,7 +160,7 @@ function WaveformWorkspace() {
             durationSamples,
             active.core_end_sample + post * SAMPLE_RATE,
           ) / SAMPLE_RATE,
-        color: "rgba(99, 102, 241, 0.13)",
+        color: WAVEFORM_COLORS.exportWindow,
         drag: false,
         resize: false,
       });

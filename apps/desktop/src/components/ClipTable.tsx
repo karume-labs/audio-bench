@@ -15,8 +15,10 @@ import { waveformBridge } from "../lib/waveformBridge";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
+import { CLIP_STATUS_COLOR } from "../theme";
+
 const statusColor = (status: string): string =>
-  status === "approved" ? "green" : status === "rejected" ? "red" : "orange";
+  CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
 
 export default function ClipTable() {
   const project = useProjectStore((s) => s.project);
