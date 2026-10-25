@@ -1,0 +1,26 @@
+[package]
+name = "audio-bench-backend"
+version = "0.1.0"
+description = "Tauri Shell and OS Integration for audio-bench"
+authors = ["you"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+thiserror = "2.0"
+hound = "3.5"
+csv = "1.4"
+calamine = "0.37"
+audio-core = { path = "../../crates/audio-core" }
+
+[dev-dependencies]
+zip = "9"
+
