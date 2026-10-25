@@ -1,0 +1,21 @@
+[package]
+name = "audio-core"
+version = "0.1.0"
+description = "High-performance audio engine for audio-bench"
+authors = ["you"]
+edition = "2021"
+
+[dependencies]
+hound = "3.5"
+symphonia = { version = "0.5", features = [
+    "wav",
+    "flac",
+    "mp3",
+    "aac",
+    "isomp4",
+] }
+rubato = "0.16"
+thiserror = "2.0"
+csv = "1"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
