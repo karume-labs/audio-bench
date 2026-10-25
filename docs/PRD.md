@@ -4,6 +4,8 @@
 **Platform:** Native Desktop Application (macOS/Windows)
 **Architecture:** Tauri (Rust backend) + React/TypeScript frontend
 
+> **Note:** The reference-script alignment feature (§2.2, §5.2, §5.3, §7 script schema, §8.2 `{id}`/`{text}` naming) has been removed. Clips are detected purely from audio; there is no transcription. Sections referencing scripts are retained for historical context only.
+
 ---
 
 ## 1. Product Overview

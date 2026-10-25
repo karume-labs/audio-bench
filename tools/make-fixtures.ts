@@ -6,7 +6,7 @@
  *                              stereo format intentionally exercises the
  *                              conform pipeline (downmix + resample) rather
  *                              than being master-ready.
- *   fixtures/test_script.csv   7-digit IDs + sentences matching the bursts.
+ *   (No script file is generated — the app no longer uses reference scripts.)
  *
  * Run: bun tools/make-fixtures.ts
  */
@@ -198,21 +198,9 @@ const writeWav = (
   writeFileSync(path, buffer);
 };
 
-/** RFC 4180 CSV escaping. */
-const csvField = (value: string): string =>
-  /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
-
-const writeCsv = (path: string): void => {
-  const lines = [SCRIPT.map((l) => `${l.id},${csvField(l.text)}`).join("\n")];
-  // With no commas in the IDs, a header row exercises header detection too.
-  const header = "id,text";
-  writeFileSync(path, `${header}\n${lines.join("\n")}\n`, "utf8");
-};
-
 mkdirSync(FIXTURES_DIR, { recursive: true });
 const { left, right } = buildAudio();
 writeWav(join(FIXTURES_DIR, "test_session.wav"), left, right);
-writeCsv(join(FIXTURES_DIR, "test_script.csv"));
 
 console.log(
   `Generated ${SCRIPT.length} lines / ${(left.length / SAMPLE_RATE).toFixed(1)}s of audio in ${FIXTURES_DIR}`,
