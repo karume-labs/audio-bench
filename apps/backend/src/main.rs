@@ -12,7 +12,6 @@ fn main() {
             commands::audio::generate_peaks,
             commands::project::load_project,
             commands::project::save_project,
-            commands::export::import_script,
             commands::export::export_clips,
         ])
         .run(tauri::generate_context!())
