@@ -1,4 +1,5 @@
 import { Alert, Center, Group, Loader, Stack, Text } from "@mantine/core";
+import { useMantineColorScheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { memo, useEffect, useRef, useState } from "react";
@@ -10,16 +11,9 @@ import { SAMPLE_RATE, samplesToSeconds } from "../lib/format";
 import { waveformBridge } from "../lib/waveformBridge";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
-import { WAVEFORM_COLORS } from "../theme";
+import { getWaveformColors } from "../theme";
 
 const EXPORT_REGION_ID = "__export_window__";
-
-const clipColor = (status: string, active: boolean): string => {
-  if (active) return "rgba(37, 99, 235, 0.32)";
-  if (status === "approved") return "rgba(34, 197, 94, 0.18)";
-  if (status === "rejected") return "rgba(239, 68, 68, 0.20)";
-  return "rgba(245, 158, 11, 0.16)";
-};
 
 function WaveformWorkspace() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +35,12 @@ function WaveformWorkspace() {
   const clips = project?.clips ?? [];
   const activeClipId = useEditorStore((s) => s.activeClipId);
   const zoom = useEditorStore((s) => s.zoom);
+  const colorScheme = useMantineColorScheme();
+  const wfColors = getWaveformColors(
+    colorScheme.colorScheme === "light" ? "light" : "dark",
+  );
+  const wfColorsRef = useRef(wfColors);
+  wfColorsRef.current = wfColors;
 
   useEffect(() => {
     if (!masterPath || !containerRef.current) return;
@@ -61,9 +61,9 @@ function WaveformWorkspace() {
         url: convertFileSrc(masterPath),
         peaks: [peaks.positive],
         duration: durationSamples / SAMPLE_RATE,
-        waveColor: WAVEFORM_COLORS.wave,
-        progressColor: WAVEFORM_COLORS.wave,
-        cursorColor: WAVEFORM_COLORS.cursor,
+        waveColor: wfColorsRef.current.wave,
+        progressColor: wfColorsRef.current.waveProgress,
+        cursorColor: wfColorsRef.current.cursor,
         cursorWidth: 2,
         fillParent: true,
         dragToSeek: true,
@@ -139,6 +139,21 @@ function WaveformWorkspace() {
     };
   }, [masterPath, durationSamples]);
 
+  // ---- Re-apply waveform colours when the colour scheme changes (no audio reload) ----
+  useEffect(() => {
+    const ws = wsRef.current;
+    if (!ready || !ws) return;
+    try {
+      ws.setOptions({
+        waveColor: wfColors.wave,
+        progressColor: wfColors.waveProgress,
+        cursorColor: wfColors.cursor,
+      });
+    } catch {
+      // ignore
+    }
+  }, [ready, wfColors]);
+
   // ---- Sync regions with clip state ----
   useEffect(() => {
     const regions = regionsRef.current;
@@ -160,7 +175,7 @@ function WaveformWorkspace() {
             durationSamples,
             active.core_end_sample + post * SAMPLE_RATE,
           ) / SAMPLE_RATE,
-        color: WAVEFORM_COLORS.exportWindow,
+        color: wfColors.exportWindow,
         drag: false,
         resize: false,
       });
@@ -172,12 +187,25 @@ function WaveformWorkspace() {
         id: clip.id,
         start: samplesToSeconds(clip.core_start_sample),
         end: samplesToSeconds(clip.core_end_sample),
-        color: clipColor(clip.status, isActive),
+        color: isActive
+          ? wfColors.activeRegion
+          : clip.status === "approved"
+            ? wfColors.approvedRegion
+            : clip.status === "rejected"
+              ? wfColors.rejectedRegion
+              : wfColors.proposedRegion,
         drag: false,
         resize: false,
       });
     }
-  }, [ready, clips, activeClipId, durationSamples, project?.export_settings]);
+  }, [
+    ready,
+    clips,
+    activeClipId,
+    durationSamples,
+    project?.export_settings,
+    wfColors,
+  ]);
 
   // ---- Scroll the active region into view ----
   useEffect(() => {

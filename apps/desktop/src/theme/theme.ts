@@ -1,5 +1,5 @@
 import { createTheme } from "@mantine/core";
-import { amber, dark, rose, teal } from "./colors";
+import { amber, dark, gray, rose, teal } from "./colors";
 
 export const theme = createTheme({
   primaryColor: "teal",
@@ -10,6 +10,7 @@ export const theme = createTheme({
     dark,
     amber,
     rose,
+    gray,
   },
   fontFamily: "Inter, system-ui, sans-serif",
   fontFamilyMonospace: "JetBrains Mono, monospace",
@@ -56,7 +57,7 @@ export const theme = createTheme({
       defaultProps: { variant: "subtle", color: "gray" },
     },
     Badge: {
-      defaultProps: { variant: "light", size: "sm" },
+      defaultProps: { variant: "outline", size: "sm" },
     },
     Paper: {
       defaultProps: { radius: "md", withBorder: true },
@@ -69,7 +70,7 @@ export const theme = createTheme({
       defaultProps: { fz: "xs", highlightOnHover: true },
     },
     Modal: {
-      defaultProps: { centered: true, overlayProps: { blur: 2 } },
+      defaultProps: { centered: true, overlayProps: { opacity: 0.5 } },
     },
     Tooltip: {
       defaultProps: { openDelay: 300, withArrow: true },

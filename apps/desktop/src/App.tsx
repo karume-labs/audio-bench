@@ -8,16 +8,26 @@ import {
   Group,
   Kbd,
   Loader,
+  SegmentedControl,
   Stack,
   Text,
   Title,
   UnstyledButton,
+  useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { nprogress } from "@mantine/nprogress";
-import { IconArrowBackUp, IconArrowForwardUp } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconBrightnessAuto,
+  IconInfoCircle,
+  IconMoon,
+  IconSunHigh,
+} from "@tabler/icons-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useEffect, useState } from "react";
+import AboutModal from "./components/AboutModal";
 import ClipInspector from "./components/ClipInspector";
 import ClipTable from "./components/ClipTable";
 import ProjectSidebar from "./components/ProjectSidebar";
@@ -43,6 +53,10 @@ export default function App() {
   const [navbarOpened, { toggle: toggleNavbar }] = useDisclosure(false);
   const [inspectorOpened, { open: openInspector, close: closeInspector }] =
     useDisclosure(false);
+  const [aboutOpened, { open: openAbout, close: closeAbout }] =
+    useDisclosure(false);
+
+  const colorScheme = useMantineColorScheme();
 
   const isMobile = useMediaQuery("(max-width: 768px)");
   const tableHeight = isMobile ? 180 : 244;
@@ -160,7 +174,7 @@ export default function App() {
                     height={24}
                     style={{ borderRadius: 4, display: "block" }}
                   />
-                  <Title order={5}>audio-bench</Title>
+                  <Title order={5}>Audio Bench</Title>
                 </Group>
               </UnstyledButton>
               {project && (
@@ -227,6 +241,29 @@ export default function App() {
                   </Button>
                 </Group>
               )}
+              <SegmentedControl
+                size="xs"
+                value={colorScheme.colorScheme}
+                onChange={(v) =>
+                  colorScheme.setColorScheme(v as "light" | "dark" | "auto")
+                }
+                data={[
+                  { value: "auto", label: <IconBrightnessAuto size={14} /> },
+                  { value: "light", label: <IconSunHigh size={14} /> },
+                  { value: "dark", label: <IconMoon size={14} /> },
+                ]}
+                aria-label="Color scheme"
+                visibleFrom="md"
+              />
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={openAbout}
+                title="About Audio Bench"
+                aria-label="About Audio Bench"
+              >
+                <IconInfoCircle size={16} />
+              </ActionIcon>
               <Group gap={6} visibleFrom="md">
                 <Kbd size="xs">Space</Kbd>
                 <Kbd size="xs">↑↓</Kbd>
@@ -286,6 +323,8 @@ export default function App() {
         <ClipInspector />
       </Drawer>
 
+      <AboutModal opened={aboutOpened} onClose={closeAbout} />
+
       {/* Splash screen */}
       {splashVisible && (
         <div
@@ -314,7 +353,7 @@ export default function App() {
             order={2}
             style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700 }}
           >
-            audio-bench
+            Audio Bench
           </Title>
           <Text size="sm" c="dimmed">
             Audio workstation
