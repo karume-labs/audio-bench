@@ -36,6 +36,7 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { isTauri } from "./ipc/commands";
 import { onAnalysisProgress } from "./ipc/events";
 import { formatTimecode } from "./lib/format";
+import { AUDIO_EXTENSIONS, SCRIPT_EXTENSIONS } from "./lib/format";
 import { notifyError, notifyInfo } from "./lib/notify";
 import { ensureNotificationPermission } from "./lib/osNotify";
 import { useEditorStore } from "./stores/useEditorStore";
@@ -46,6 +47,50 @@ export default function App() {
 
   const [splashVisible, setSplashVisible] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  // $FlowFixMe - used in useEffect below
+  // @ts-ignore
+  const [dropKind, setDropKind] = useState<
+    | "none"
+    | "recording"
+    | "script"
+    | "project"
+    | "unsupported"
+    | "multiple"
+    | "both"
+  >("none");
+
+  /** Classify dropped files by extension.
+   *  Returns a human-readable kind: "recording", "script", "project", "unsupported", "multiple", "none". */
+  // @ts-ignore
+  const classifyDropKind = (
+    files: File[],
+  ):
+    | "none"
+    | "recording"
+    | "script"
+    | "project"
+    | "unsupported"
+    | "multiple"
+    | "both" => {
+    // $FlowFixMe
+    if (files.length === 0) return "none";
+    if (files.length > 2) return "multiple";
+
+    const extensions = files.map(
+      (f) => f.name.split(".").pop()?.toLowerCase() ?? "",
+    );
+    const hasRecording = extensions.some((ext) => AUDIO_EXTENSIONS.has(ext));
+    const hasScript = extensions.some((ext) => SCRIPT_EXTENSIONS.has(ext));
+    const hasProject = extensions.some((ext) => ext === "audiobench");
+
+    if (hasProject && files.length === 1) return "project";
+    if (hasRecording && hasScript) return "both";
+    if (hasRecording && !hasScript) return "recording";
+    if (hasScript && !hasRecording) return "script";
+    if (!hasRecording && !hasScript && !hasProject) return "unsupported";
+    return "none";
+  };
+
   useEffect(() => {
     const t = setTimeout(() => setSplashVisible(false), 1500);
     return () => clearTimeout(t);
