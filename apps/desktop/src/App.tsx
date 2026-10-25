@@ -390,12 +390,21 @@ export default function App() {
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 9997,
+            zIndex: 9999,
             background: "var(--mantine-color-teal-6)",
-            opacity: 0.15,
+            opacity: 0.3,
             pointerEvents: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--mantine-color-dark-1)",
+            fontFamily: "Space Grotesk, sans-serif",
           }}
-        />
+        >
+          <Text size="lg" c="dark-1" fw={700}>
+            Release to drop
+          </Text>
+        </div>
       )}
     </div>
   );
