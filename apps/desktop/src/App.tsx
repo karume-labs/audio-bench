@@ -45,6 +45,7 @@ export default function App() {
   useKeyboardShortcuts();
 
   const [splashVisible, setSplashVisible] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setSplashVisible(false), 1500);
     return () => clearTimeout(t);
@@ -79,6 +80,27 @@ export default function App() {
 
   useEffect(() => {
     void ensureNotificationPermission();
+  }, []);
+
+  useEffect(() => {
+    const onDragOver = (_e: DragEvent) => {
+      _e.preventDefault();
+      setIsDragging(true);
+    };
+    const onDragLeave = (_e: DragEvent) => {
+      setTimeout(() => setIsDragging(false), 150);
+    };
+    const onDrop = (_e: DragEvent) => {
+      setIsDragging(false);
+    };
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("dragleave", onDragLeave);
+    document.addEventListener("drop", onDrop);
+    return () => {
+      document.removeEventListener("dragover", onDragOver);
+      document.removeEventListener("dragleave", onDragLeave);
+      document.removeEventListener("drop", onDrop);
+    };
   }, []);
 
   useEffect(() => {
@@ -360,6 +382,20 @@ export default function App() {
             Audio workstation
           </Text>
         </div>
+      )}
+
+      {/* Drag-over indicator */}
+      {isDragging && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9997,
+            background: "var(--mantine-color-teal-6)",
+            opacity: 0.15,
+            pointerEvents: "none",
+          }}
+        />
       )}
     </div>
   );
