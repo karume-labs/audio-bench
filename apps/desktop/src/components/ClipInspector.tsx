@@ -74,7 +74,7 @@ export default function ClipInspector() {
 
   return (
     <ScrollArea type="auto" h="100%">
-      <Stack gap="sm">
+      <Stack gap="sm" p="sm">
         <Group justify="space-between" align="flex-start">
           <div>
             <Text size="xs" c="dimmed">

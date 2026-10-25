@@ -166,7 +166,7 @@ export default function App() {
                 onClick={onDropHint}
                 title="Drop files anywhere to import"
               >
-                <Group gap="xs" wrap="nowrap">
+                <Group gap="sm" wrap="nowrap">
                   <img
                     src="/logo.png"
                     alt="audio-bench logo"
@@ -336,7 +336,8 @@ export default function App() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 16,
+            gap: 24,
+            padding: 32,
             background: "var(--mantine-color-dark-7)",
             transition: "opacity 300ms ease-out",
             opacity: splashVisible ? 1 : 0,

@@ -142,7 +142,7 @@ export default function ProjectSidebar() {
       <Stack gap="sm" p="xs">
         <div>
           <Text fw={700} size="sm">
-            Audio Workbench
+            Audio Bench
           </Text>
           <Text size="xs" c="dimmed">
             {project
