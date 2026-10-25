@@ -1,0 +1,37 @@
+{
+  "name": "desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@audio-bench/domain": "workspace:*",
+    "@mantine/core": "^7.17.0",
+    "@mantine/modals": "^7.17.0",
+    "@mantine/notifications": "^7.17.0",
+    "@mantine/nprogress": "^7.17.0",
+    "@tabler/icons-react": "^3",
+    "@tauri-apps/api": "^2.2.0",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-opener": "^2.2.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "wavesurfer.js": "^7.8.15",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.3",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "~5.8.2",
+    "vite": "^8.0.16"
+  }
+}
