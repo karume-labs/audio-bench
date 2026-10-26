@@ -4,7 +4,7 @@ import { waveformBridge } from "@/lib/waveformBridge";
 import { useEditorStore } from "@/stores/useEditorStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { getWaveformColors } from "@/theme";
-import { Alert, Center, Group, Loader, Stack, Text } from "@mantine/core";
+import { Alert, Center, Group, Skeleton, Stack, Text } from "@mantine/core";
 import { useMantineColorScheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -313,7 +313,7 @@ function WaveformWorkspaceComponent() {
         </Text>
         {!ready && (
           <Group gap="xs">
-            <Loader size="xs" />
+            <Skeleton width={120} height={12} />
             <Text size="xs" c="dimmed">
               Generating peaks…
             </Text>
