@@ -1,26 +1,41 @@
-import { Button, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Stack,
+  Text,
+  Title,
+  UnstyledButton,
+} from "@mantine/core";
 import { IconFileMusic, IconFolderOpen } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 import { pickAudioFile, pickProjectFile } from "../ipc/commands";
 import { ACCEPTED_AUDIO } from "../lib/dropKind";
 import { notifyError } from "../lib/notify";
+import {
+  type RecentProject,
+  loadRecentProjects,
+  removeRecentProject,
+} from "../lib/recentProjects";
 import { useProjectStore } from "../stores/useProjectStore";
 
-/**
- * First-run screen: nothing but the logo and the two ways in.
- *
- * The sidebar, inspector and clip table only mount once a session exists, so
- * an empty app shows one obvious choice instead of an empty workstation.
- */
 export default function StartScreen({
   headerHeight,
 }: { headerHeight: number }) {
   const ingestPath = useProjectStore((s) => s.ingestPath);
   const openProject = useProjectStore((s) => s.openProject);
+  const [recent, setRecent] = useState<RecentProject[]>([]);
+
+  useEffect(() => {
+    setRecent(loadRecentProjects());
+  }, []);
+
+  const refresh = () => setRecent(loadRecentProjects());
 
   const onImport = async (): Promise<void> => {
     try {
       const path = await pickAudioFile();
       if (path) await ingestPath(path);
+      refresh();
     } catch (err) {
       notifyError("Could not open recording", err);
     }
@@ -30,7 +45,19 @@ export default function StartScreen({
     try {
       const path = await pickProjectFile();
       if (path) await openProject(path);
+      refresh();
     } catch (err) {
+      notifyError("Could not open project", err);
+    }
+  };
+
+  const onOpenRecent = async (entry: RecentProject): Promise<void> => {
+    try {
+      await openProject(entry.path);
+      refresh();
+    } catch (err) {
+      removeRecentProject(entry.path);
+      setRecent(loadRecentProjects());
       notifyError("Could not open project", err);
     }
   };
@@ -45,7 +72,7 @@ export default function StartScreen({
         padding: 24,
       }}
     >
-      <Stack align="center" gap="lg" ta="center" maw={460}>
+      <Stack align="center" gap="lg" ta="center" maw={520} w="100%">
         <img
           src="/logo.png"
           alt="Audio Bench logo"
@@ -87,6 +114,37 @@ export default function StartScreen({
           </Text>{" "}
           file anywhere on this window
         </Text>
+
+        {recent.length > 0 && (
+          <Stack gap={6} w="100%" mt="sm">
+            <Text size="xs" tt="uppercase" fw={700} c="dimmed">
+              Recent projects
+            </Text>
+            <Stack gap={4}>
+              {recent.map((entry) => (
+                <UnstyledButton
+                  key={entry.path}
+                  onClick={() => void onOpenRecent(entry)}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "1px solid var(--mantine-color-default-border)",
+                    background: "var(--mantine-color-default)",
+                  }}
+                >
+                  <Text size="sm" fw={500} lineClamp={1}>
+                    {entry.name}
+                  </Text>
+                  <Text size="xs" c="dimmed" ff="monospace" lineClamp={1}>
+                    {entry.path}
+                  </Text>
+                </UnstyledButton>
+              ))}
+            </Stack>
+          </Stack>
+        )}
       </Stack>
     </div>
   );

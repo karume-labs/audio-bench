@@ -32,6 +32,7 @@ import {
 } from "../lib/format";
 import { notifyError, notifyInfo, notifySuccess } from "../lib/notify";
 import { notifyOsIfUnfocused } from "../lib/osNotify";
+import { recordRecentProject } from "../lib/recentProjects";
 import { useEditorStore } from "./useEditorStore";
 
 const newUuid = (): string => globalThis.crypto.randomUUID();
@@ -76,6 +77,7 @@ interface ProjectStore {
   setDetectionMinSilenceMs: (value: number | null) => void;
   ingestPath: (path: string) => Promise<void>;
   analyzeAudio: (path: string) => Promise<void>;
+  reanalyze: () => Promise<void>;
   openProject: (path: string) => Promise<void>;
   closeProject: () => void;
   saveProject: (announce?: boolean) => Promise<void>;
@@ -163,6 +165,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
             post_window_s: 5,
             fade_ms: 5,
           },
+          detection_min_silence_ms: get().detectionMinSilenceMs,
+          resolved_min_silence_ms: result.minSilenceMs,
           source: {
             original_path: result.source.originalPath,
             master_path: result.source.masterPath,
@@ -183,6 +187,10 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           redoStack: [],
           lastResolvedMinSilenceMs: result.minSilenceMs,
         });
+        recordRecentProject(
+          deriveProjectPath(result.source.originalPath),
+          project.name ?? basename(result.source.originalPath),
+        );
 
         const editor = useEditorStore.getState();
         editor.setActive(clips[0]?.id ?? null);
@@ -204,6 +212,54 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
       }
     },
 
+    reanalyze: async () => {
+      const project = get().project;
+      if (!project) return;
+      if (get().busy || get().exporting) {
+        notifyInfo("Still busy", "Wait for analysis or export to finish.");
+        return;
+      }
+      set({ busy: true, progress: null });
+      try {
+        const result = await analyzeRecording(project.source.original_path, {
+          minSilenceMs: get().detectionMinSilenceMs,
+        });
+        const detected: Clip[] = result.clips.map((c) => ({
+          id: newUuid(),
+          core_start_sample: c.startSample,
+          core_end_sample: c.endSample,
+          status: "proposed",
+          flags: [],
+        }));
+        const next = projectSchema.parse({
+          ...project,
+          clips: detected,
+          detection_min_silence_ms: get().detectionMinSilenceMs,
+          resolved_min_silence_ms: result.minSilenceMs,
+        });
+        const clips = withFlags(next, next.clips);
+        set({
+          project: { ...next, clips },
+          busy: false,
+          progress: null,
+          undoStack: [],
+          redoStack: [],
+          lastResolvedMinSilenceMs: result.minSilenceMs,
+        });
+        const editor = useEditorStore.getState();
+        editor.setActive(clips[0]?.id ?? null);
+        editor.setChecked([]);
+        await persist();
+        notifySuccess(
+          "Re-analysis complete",
+          `${clips.length} clips from ${formatDuration(result.source.durationSeconds)} of audio.`,
+        );
+      } catch (err) {
+        set({ busy: false, progress: null });
+        notifyError("Re-analysis failed", err);
+      }
+    },
+
     openProject: async (path) => {
       try {
         const raw = await loadProjectFile(path);
@@ -216,7 +272,8 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           progress: null,
           undoStack: [],
           redoStack: [],
-          lastResolvedMinSilenceMs: null,
+          detectionMinSilenceMs: project.detection_min_silence_ms ?? null,
+          lastResolvedMinSilenceMs: project.resolved_min_silence_ms ?? null,
         });
         const editor = useEditorStore.getState();
         editor.setActive(orderedClips(project.clips)[0]?.id ?? null);
@@ -225,6 +282,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           "Project opened",
           `${project.clips.length} clips from ${basename(path)}`,
         );
+        recordRecentProject(path, project.name ?? basename(path));
       } catch (err) {
         notifyError("Could not open project", err);
       }

@@ -58,6 +58,7 @@ export default function ProjectSidebar() {
   const saveProject = useProjectStore((s) => s.saveProject);
   const exportBlockers = useProjectStore((s) => s.exportBlockers);
   const executeExport = useProjectStore((s) => s.executeExport);
+  const reanalyze = useProjectStore((s) => s.reanalyze);
   const detectionMinSilenceMs = useProjectStore((s) => s.detectionMinSilenceMs);
   const lastResolvedMinSilenceMs = useProjectStore(
     (s) => s.lastResolvedMinSilenceMs,
@@ -72,6 +73,20 @@ export default function ProjectSidebar() {
     setGate(exportBlockers());
   }, [exportBlockers]);
 
+  const onReanalyze = (): void => {
+    modals.openConfirmModal({
+      title: "Re-run detection?",
+      children: (
+        <Text size="sm">
+          This re-splits the recording with the current minimum-silence setting
+          and replaces all clips and undo history. Clip statuses are reset.
+        </Text>
+      ),
+      labels: { confirm: "Re-analyze", cancel: "Cancel" },
+      confirmProps: { color: "amber" },
+      onConfirm: () => void reanalyze(),
+    });
+  };
   const onPickAudio = async (): Promise<void> => {
     try {
       const path = await pickAudioFile();
@@ -363,6 +378,21 @@ export default function ProjectSidebar() {
             <Text size="xs" c="dimmed">
               Detection runs on the conformed master.
             </Text>
+            <Tip
+              label="Re-analyze"
+              description="Re-run silence detection with the current minimum-silence setting. Replaces all clips and clears undo history."
+            >
+              <Button
+                size="xs"
+                variant="light"
+                fullWidth
+                onClick={onReanalyze}
+                disabled={!project || busy || exporting}
+                loading={busy}
+              >
+                Re-analyze with current settings
+              </Button>
+            </Tip>
 
             <Divider />
             <SectionLabel>Project file</SectionLabel>

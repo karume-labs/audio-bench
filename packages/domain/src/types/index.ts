@@ -57,6 +57,8 @@ export const projectSchema = z.object({
   name: z.string().optional(),
   naming_template: namingTemplate,
   export_settings: exportSettingsSchema.optional(),
+  detection_min_silence_ms: z.number().nullable().optional(),
+  resolved_min_silence_ms: z.number().optional(),
   source: sourceSchema,
   clips: z.array(clipSchema),
 });
