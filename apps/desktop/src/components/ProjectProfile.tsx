@@ -1,3 +1,4 @@
+import { ProjectDetails } from "@/components/ProjectDetails";
 import { Tip } from "@/components/Tip";
 import { useProjectStore } from "@/stores/useProjectStore";
 import {
@@ -8,7 +9,6 @@ import {
   Paper,
   Stack,
   Text,
-  TextInput,
   ThemeIcon,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -35,9 +35,6 @@ export const ProjectProfile = () => {
   const setDetectionMinSilenceMs = useProjectStore(
     (s) => s.setDetectionMinSilenceMs,
   );
-  const renameProject = useProjectStore((s) => s.renameProject);
-  const setNamingTemplate = useProjectStore((s) => s.setNamingTemplate);
-  const deleteProject = useProjectStore((s) => s.deleteProject);
   const reanalyze = useProjectStore((s) => s.reanalyze);
 
   if (!project) return null;
@@ -60,7 +57,9 @@ export const ProjectProfile = () => {
   return (
     <>
       <Divider />
-      <SectionLabelInner>Processing profile</SectionLabelInner>
+      <Text fw={700} size="sm">
+        Processing profile
+      </Text>
       <Tip
         label="Detection profile"
         description="Settings the silence detector ran with: 10 ms frames, 20 dB margin over the noise floor, adjustable minimum silence, 300 ms minimum clip."
@@ -130,65 +129,12 @@ export const ProjectProfile = () => {
         </Button>
       </Tip>
 
-      <Divider />
-      <SectionLabelInner>Project details</SectionLabelInner>
-      <Stack gap={6}>
-        <Tip
-          label="Project name"
-          description="Display name used in the sidebar, header and exports."
-        >
-          <TextInput
-            key={`name-${project.id}`}
-            size="xs"
-            label="Name"
-            defaultValue={project.name ?? ""}
-            onBlur={(e) => void renameProject(e.currentTarget.value)}
-          />
-        </Tip>
-        <Tip
-          label="Naming template"
-          description="Tokens: {n} index, {status}, {date}. Applied on export."
-        >
-          <TextInput
-            key={`tpl-${project.id}`}
-            size="xs"
-            label="Export name template"
-            defaultValue={project.naming_template}
-            onBlur={(e) => setNamingTemplate(e.currentTarget.value)}
-          />
-        </Tip>
-        <Tip
-          label="Delete project"
-          description="Removes the project file and its conformed audio from disk."
-        >
-          <Button
-            size="xs"
-            color="red"
-            variant="light"
-            fullWidth
-            onClick={() => {
-              modals.openConfirmModal({
-                title: "Delete project?",
-                children: (
-                  <Text size="sm">
-                    This permanently deletes the project file and its conformed
-                    master/preview audio from disk. This cannot be undone.
-                  </Text>
-                ),
-                labels: { confirm: "Delete", cancel: "Cancel" },
-                confirmProps: { color: "red" },
-                onConfirm: () => void deleteProject(),
-              });
-            }}
-            disabled={busy || exporting}
-          >
-            Delete project
-          </Button>
-        </Tip>
-      </Stack>
+      <ProjectDetails />
 
       <Divider />
-      <SectionLabelInner>Project file</SectionLabelInner>
+      <Text fw={700} size="sm">
+        Project file
+      </Text>
       <Tip
         label="Project file"
         description="Autosaved after every edit. Reopen it with Open, or by dropping the file anywhere on the window."
@@ -208,10 +154,3 @@ export const ProjectProfile = () => {
     </>
   );
 };
-
-// local alias so we don't need to import SectionLabel from the sidebar
-const SectionLabelInner = ({ children }: { children: React.ReactNode }) => (
-  <Text fw={700} size="sm">
-    {children}
-  </Text>
-);
