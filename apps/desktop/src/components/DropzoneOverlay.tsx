@@ -88,7 +88,8 @@ export default function DropzoneOverlay() {
           </Text>
 
           {/* The type list is skipped when the hint above already spells
-              it out (unsupported-file copy), to avoid saying it twice. */}
+              it out (the generic copy lists the accepted formats), to
+              avoid saying it twice. */}
           {!copy.hint.includes("WAV") && (
             <Text size="xs" c="dimmed" mt={14}>
               Accepts{" "}

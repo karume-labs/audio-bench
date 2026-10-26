@@ -200,8 +200,14 @@ export default function App() {
 
       const kind = classifyDropPaths(paths);
       if (kind === "none" || kind === "unsupported" || kind === "multiple") {
+        // The drag overlay deliberately stays generic — this toast is where
+        // an unusable drop gets explained.
         notifyError(
-          "Nothing to open",
+          kind === "multiple"
+            ? "Too many files"
+            : kind === "unsupported"
+              ? "Unsupported file type"
+              : "Nothing to open",
           kind === "multiple"
             ? "Drop one recording (optionally with its project file) at a time."
             : `Audio Bench opens WAV, FLAC, MP3, M4A recordings and .audiobench projects. Got: ${paths

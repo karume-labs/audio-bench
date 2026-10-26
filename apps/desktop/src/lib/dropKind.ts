@@ -56,6 +56,20 @@ export interface DropCopy {
   accept: boolean;
 }
 
+/** The plain, always-applicable dropzone copy (no special-case message). */
+const baseDropCopy = (hasProject: boolean): DropCopy =>
+  hasProject
+    ? {
+        title: "Drop to replace or open files",
+        hint: "Audio Bench asks before replacing the session you already have open.",
+        accept: true,
+      }
+    : {
+        title: "Drop a recording to start",
+        hint: `Accepts ${ACCEPTED_AUDIO} audio and .audiobench project files.`,
+        accept: true,
+      };
+
 /** Context-aware copy for the drop overlay. */
 export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
   if (ctx.busy) {
@@ -67,12 +81,11 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
   }
 
   switch (kind) {
+    // No dedicated "invalid file type" overlay: the normal dropzone panel
+    // stays up (neutral border, because the drop will be refused) and the
+    // rejection itself is reported by the toast when the files land.
     case "unsupported":
-      return {
-        title: "That file type isn't supported",
-        hint: `Audio Bench opens ${ACCEPTED_AUDIO} recordings and .audiobench project files.`,
-        accept: false,
-      };
+      return { ...baseDropCopy(ctx.hasProject), accept: false };
     case "multiple":
       return {
         title: "One recording at a time",
@@ -110,17 +123,7 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
             accept: true,
           };
     default:
-      return ctx.hasProject
-        ? {
-            title: "Drop to replace or open files",
-            hint: "Audio Bench asks before replacing the session you already have open.",
-            accept: true,
-          }
-        : {
-            title: "Drop a recording to start",
-            hint: `Accepts ${ACCEPTED_AUDIO} audio and .audiobench project files.`,
-            accept: true,
-          };
+      return baseDropCopy(ctx.hasProject);
   }
 };
 

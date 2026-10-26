@@ -87,11 +87,24 @@ describe("dropCopy", () => {
     }
   });
 
-  test("unsupported and multiple are refused with an explanation", () => {
-    for (const kind of ["unsupported", "multiple"] as const) {
-      const copy = dropCopy(kind, idle);
+  test("multiple files keep their own message", () => {
+    const copy = dropCopy("multiple", idle);
+    expect(copy.accept).toBe(false);
+    expect(copy.title).toContain("One recording at a time");
+    expect(copy.hint.length).toBeGreaterThan(0);
+  });
+
+  test("unsupported type shows the normal dropzone UI, not an error panel", () => {
+    // The rejection is reported by the toast when the files land, so the
+    // drag overlay must not switch to an "invalid file type" message.
+    for (const ctx of [idle, open] as const) {
+      const copy = dropCopy("unsupported", ctx);
+      const base = dropCopy("none", ctx);
+      expect(copy.title).toBe(base.title);
+      expect(copy.hint).toBe(base.hint);
+      expect(copy.title).not.toContain("supported");
+      // Still neutral (no teal) while the drop will be refused.
       expect(copy.accept).toBe(false);
-      expect(copy.hint.length).toBeGreaterThan(0);
     }
   });
 
