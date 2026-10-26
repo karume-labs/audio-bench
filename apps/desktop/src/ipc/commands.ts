@@ -44,6 +44,9 @@ export const saveProjectFile = (path: string, project: unknown) =>
 export const deleteProjectFile = (path: string) =>
   call<void>("delete_project", { path });
 
+export const renameProjectFolder = (oldPath: string, newPath: string) =>
+  call<void>("rename_project_folder", { oldPath, newPath });
+
 export const exportClips = (request: ExportRequest) =>
   call<ExportResult>("export_clips", { request });
 

@@ -3,6 +3,7 @@ import {
   deleteProjectFile,
   exportClips,
   loadProjectFile,
+  renameProjectFolder,
   saveProjectFile,
 } from "@/ipc/commands";
 import type { AnalysisProgress } from "@/ipc/events";
@@ -40,8 +41,16 @@ import { create } from "zustand";
 
 const newUuid = (): string => globalThis.crypto.randomUUID();
 
-const deriveProjectPath = (originalPath: string): string =>
-  `${originalPath.replace(/\.[^./\\]+$/, "")}.audiobench`;
+const deriveProjectPath = (originalPath: string): string => {
+  const baseName = basename(originalPath); // e.g. "recording.wav"
+  const nameWithoutExt = baseName.replace(/\.[^./\\]+$/, ""); // e.g. "recording"
+  // Get the directory portion of the original path
+  const dir = originalPath.replace(/[^/]*$/, "") || "./";
+  // Project folder named after the source audio basename without extension
+  const folder = `${dir}${nameWithoutExt}/`;
+  // .audiobench file inside the project folder
+  return `${folder}${nameWithoutExt}.audiobench`;
+};
 
 /** Recompute derived flags (edge_clamped based on the 5s export window). */
 
@@ -87,7 +96,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     if (!project || !projectPath) return;
     try {
       const clean = projectSchema.parse(project);
+      // Use the file system to create the directory if it doesn't exist
+      // We'll do this via a small helper that Tauri can perform
       await saveProjectFile(projectPath, clean);
+      // After saving, the folder should exist; we could also explicitly
+      // create it here if needed, but the file write should suffice.
     } catch (err) {
       notifyError("Autosave failed", err);
     }
@@ -304,6 +317,20 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
       const next = { ...project, name: trimmed };
       set({ project: next });
       await persist();
+      // Rename the project folder to match the new project name.
+      const oldPath = get().projectPath ?? "";
+      if (oldPath && oldPath.endsWith(".audiobench")) {
+        const folder = oldPath.replace(/\/[^\/]+\.audiobench$/, "/");
+        const folderName = folder.replace(/\/$/, ""); // remove trailing slash
+        const newFolderName = trimmed.replace(/[/\\]/g, "_"); // sanitize for filesystem
+        const newFolder = folder.replace(folderName, newFolderName);
+        // Rename the folder using the Rust backend
+        try {
+          await renameProjectFolder(folder, newFolder);
+        } catch (err) {
+          notifyError("Rename folder failed", err);
+        }
+      }
       notifySuccess("Renamed", `Project is now "${trimmed}".`);
     },
 

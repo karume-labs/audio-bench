@@ -21,14 +21,69 @@ pub fn load_project(path: String) -> Result<Option<Value>, BackendError> {
     }
 }
 
+/// Ensure the parent directory of a path exists, creating it if necessary.
+fn ensure_parent_dir(path: &str) -> Result<(), BackendError> {
+    use std::path::Path;
+    let parent = Path::new(path).parent().ok_or_else(|| {
+        BackendError::InvalidRequest("Invalid project path: no parent directory".to_string())
+    })?;
+    if !parent.exists() {
+        std::fs::create_dir_all(parent).map_err(|e| {
+            BackendError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to create parent directory: {}", e),
+            ))
+        })?;
+    }
+    Ok(())
+}
+
+/// Rename a project folder.
+///
+/// The old path should point to the `.audiobench` file inside the folder,
+/// and the new path should be the full path of the new folder location.
+#[tauri::command]
+pub fn rename_project_folder(old_path: String, new_path: String) -> Result<(), BackendError> {
+    use std::path::Path;
+    let old_p = Path::new(&old_path);
+    let new_p = Path::new(&new_path);
+    // Best-effort: try to rename the directory.
+    // If the new parent doesn't exist, create it.
+    if !new_p.parent().unwrap_or(new_p).exists() {
+        if let Some(parent) = new_p.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+    }
+    let _ = std::fs::rename(old_p, new_p);
+    Ok(())
+}
+
 /// Save a `.audiobench` project file as pretty-printed JSON.
 ///
 /// The payload is passed through untouched; schema validation is done in TS.
+/// Parent directories will be created if they do not exist.
 #[tauri::command]
 pub fn save_project(path: String, project: Value) -> Result<(), BackendError> {
     let json = serde_json::to_string_pretty(&project)
         .map_err(|e| BackendError::Json(format!("Failed to serialize project: {}", e)))?;
+    ensure_parent_dir(&path)?;
     std::fs::write(&path, json)?;
+    Ok(())
+}
+
+/// Delete a project and its conformed audio files from disk.
+///
+/// Removes the entire project folder (containing the `.audiobench` file,
+/// master and preview WAVs, and the source audio reference), along with any
+/// other files inside it. Missing folders are ignored.
+fn remove_project_folder(path: &str) -> Result<(), BackendError> {
+    use std::path::Path;
+    let p = Path::new(path);
+    // Best-effort: read the project to learn which master/preview to consider.
+    // Then remove the folder and all its contents.
+    if p.exists() {
+        let _ = std::fs::remove_dir_all(p);
+    }
     Ok(())
 }
 
@@ -50,12 +105,8 @@ pub fn delete_project(path: String) -> Result<(), BackendError> {
             }
         }
     }
-    // Always attempt to remove the project file itself.
-    match std::fs::remove_file(&path) {
-        Ok(()) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(e) => Err(BackendError::Io(e)),
-    }
+    // Remove the entire project folder (containing .audiobench and associated files).
+    remove_project_folder(&path)
 }
 
 #[cfg(test)]

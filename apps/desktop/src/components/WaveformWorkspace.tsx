@@ -21,6 +21,7 @@ function WaveformWorkspaceComponent() {
   const wsRef = useRef<WaveSurfer | null>(null);
   const regionsRef = useRef<RegionsPlugin | null>(null);
   const windowModeRef = useRef(false);
+  const objectUrlRef = useRef<string | null>(null);
 
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -57,10 +58,27 @@ function WaveformWorkspaceComponent() {
       const peaks = await generatePeaks(masterPath, width);
       if (disposed) return;
 
+      const audioSrc = convertFileSrc(previewPath ?? masterPath);
+      let objectUrl: string | null = null;
+      try {
+        const response = await fetch(audioSrc);
+        if (response.ok) {
+          const blob = await response.blob();
+          objectUrl = URL.createObjectURL(blob);
+        }
+      } catch {
+        // Fall back to original convertFileSrc url if fetch fails
+      }
+      if (disposed) {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        return;
+      }
+      objectUrlRef.current = objectUrl;
+
       const ws = WaveSurfer.create({
         container,
         height: waveHeightRef.current,
-        url: convertFileSrc(previewPath ?? masterPath),
+        url: objectUrl ?? audioSrc,
         peaks: [peaks.positive],
         duration: durationSamples / SAMPLE_RATE,
         waveColor: wfColorsRef.current.wave,
@@ -149,6 +167,10 @@ function WaveformWorkspaceComponent() {
       regionsRef.current = null;
       wsRef.current?.destroy();
       wsRef.current = null;
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
       setReady(false);
     };
   }, [masterPath, previewPath, durationSamples]);
