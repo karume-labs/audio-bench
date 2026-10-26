@@ -11,6 +11,7 @@ import {
   ScrollArea,
   Stack,
   Text,
+  TextInput,
   ThemeIcon,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -58,6 +59,9 @@ export default function ProjectSidebar() {
   const saveProject = useProjectStore((s) => s.saveProject);
   const exportBlockers = useProjectStore((s) => s.exportBlockers);
   const executeExport = useProjectStore((s) => s.executeExport);
+  const renameProject = useProjectStore((s) => s.renameProject);
+  const setNamingTemplate = useProjectStore((s) => s.setNamingTemplate);
+  const deleteProject = useProjectStore((s) => s.deleteProject);
   const reanalyze = useProjectStore((s) => s.reanalyze);
   const detectionMinSilenceMs = useProjectStore((s) => s.detectionMinSilenceMs);
   const lastResolvedMinSilenceMs = useProjectStore(
@@ -221,6 +225,69 @@ export default function ProjectSidebar() {
             </Button>
           </Tip>
         </Group>
+
+        {project && (
+          <>
+            <Divider />
+            <SectionLabel>Project details</SectionLabel>
+            <Stack gap={6}>
+              <Tip
+                label="Project name"
+                description="Display name used in the sidebar, header and exports."
+              >
+                <TextInput
+                  key={`name-${project.id}`}
+                  size="xs"
+                  label="Name"
+                  defaultValue={project.name ?? ""}
+                  placeholder={basename(project.source.original_path)}
+                  onBlur={(e) => void renameProject(e.currentTarget.value)}
+                />
+              </Tip>
+              <Tip
+                label="Naming template"
+                description="Tokens: {n} index, {status}, {date}. Applied on export."
+              >
+                <TextInput
+                  key={`tpl-${project.id}`}
+                  size="xs"
+                  label="Export name template"
+                  defaultValue={project.naming_template}
+                  onBlur={(e) => setNamingTemplate(e.currentTarget.value)}
+                />
+              </Tip>
+              <Tip
+                label="Delete project"
+                description="Removes the project file and its conformed audio from disk."
+              >
+                <Button
+                  size="xs"
+                  color="red"
+                  variant="light"
+                  fullWidth
+                  onClick={() => {
+                    modals.openConfirmModal({
+                      title: "Delete project?",
+                      children: (
+                        <Text size="sm">
+                          This permanently deletes the project file and its
+                          conformed master/preview audio from disk. This cannot
+                          be undone.
+                        </Text>
+                      ),
+                      labels: { confirm: "Delete", cancel: "Cancel" },
+                      confirmProps: { color: "red" },
+                      onConfirm: () => void deleteProject(),
+                    });
+                  }}
+                  disabled={busy || exporting}
+                >
+                  Delete project
+                </Button>
+              </Tip>
+            </Stack>
+          </>
+        )}
 
         {busy && (
           <Paper withBorder p="xs">

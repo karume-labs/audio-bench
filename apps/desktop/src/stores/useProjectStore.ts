@@ -19,6 +19,7 @@ import {
 import { create } from "zustand";
 import {
   analyzeRecording,
+  deleteProjectFile,
   exportClips,
   loadProjectFile,
   saveProjectFile,
@@ -32,6 +33,7 @@ import {
 } from "../lib/format";
 import { notifyError, notifyInfo, notifySuccess } from "../lib/notify";
 import { notifyOsIfUnfocused } from "../lib/osNotify";
+import { removeRecentProject } from "../lib/recentProjects";
 import { recordRecentProject } from "../lib/recentProjects";
 import { useEditorStore } from "./useEditorStore";
 
@@ -80,6 +82,9 @@ interface ProjectStore {
   reanalyze: () => Promise<void>;
   openProject: (path: string) => Promise<void>;
   closeProject: () => void;
+  renameProject: (name: string) => Promise<void>;
+  setNamingTemplate: (template: string) => void;
+  deleteProject: (path?: string) => Promise<void>;
   saveProject: (announce?: boolean) => Promise<void>;
   exportBlockers: () => string | null;
   executeExport: (outDir: string) => Promise<void>;
@@ -132,7 +137,16 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     lastResolvedMinSilenceMs: null,
 
     setProgress: (p) => set({ progress: p }),
-    setDetectionMinSilenceMs: (value) => set({ detectionMinSilenceMs: value }),
+    setDetectionMinSilenceMs: (value) => {
+      const project = get().project;
+      set({
+        detectionMinSilenceMs: value,
+        project: project
+          ? { ...project, detection_min_silence_ms: value }
+          : project,
+      });
+      void persist();
+    },
 
     ingestPath: async (path) => {
       const ext = extname(path);
@@ -286,6 +300,57 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
         recordRecentProject(path, project.name ?? basename(path));
       } catch (err) {
         notifyError("Could not open project", err);
+      }
+    },
+
+    setNamingTemplate: (template) => {
+      const project = get().project;
+      if (!project) return;
+      set({ project: { ...project, naming_template: template } });
+      void persist();
+    },
+
+    renameProject: async (name) => {
+      const project = get().project;
+      if (!project) return;
+      const trimmed = name.trim();
+      if (!trimmed) {
+        notifyInfo("Name required", "Project name cannot be empty.");
+        return;
+      }
+      const next = { ...project, name: trimmed };
+      set({ project: next });
+      await persist();
+      notifySuccess("Renamed", `Project is now "${trimmed}".`);
+    },
+
+    deleteProject: async (path) => {
+      const target = path ?? get().projectPath;
+      if (!target) return;
+      set({ busy: true });
+      try {
+        await deleteProjectFile(target);
+        removeRecentProject(target);
+        if (get().projectPath === target) {
+          set({
+            project: null,
+            projectPath: null,
+            busy: false,
+            progress: null,
+            undoStack: [],
+            redoStack: [],
+            lastResolvedMinSilenceMs: null,
+          });
+          const editor = useEditorStore.getState();
+          editor.setActive(null);
+          editor.setChecked([]);
+        } else {
+          set({ busy: false });
+        }
+        notifySuccess("Deleted", `Removed ${target.split("/").pop()}.`);
+      } catch (err) {
+        set({ busy: false });
+        notifyError("Could not delete project", err);
       }
     },
 

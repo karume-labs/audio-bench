@@ -11,6 +11,7 @@ import {
   SegmentedControl,
   Stack,
   Text,
+  TextInput,
   Title,
   UnstyledButton,
   useMantineColorScheme,
@@ -18,17 +19,21 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { nprogress } from "@mantine/nprogress";
+import { Spotlight } from "@mantine/spotlight";
 import {
   IconArrowBackUp,
   IconArrowForwardUp,
   IconBrightnessAuto,
+  IconFileMusic,
+  IconFolderOpen,
   IconHelpCircle,
   IconInfoCircle,
   IconMoon,
   IconSunHigh,
+  IconTrash,
 } from "@tabler/icons-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AboutModal from "./components/AboutModal";
 import ClipInspector from "./components/ClipInspector";
 import ClipTable from "./components/ClipTable";
@@ -39,12 +44,13 @@ import StartScreen from "./components/StartScreen";
 import Tip from "./components/Tip";
 import WaveformWorkspace from "./components/WaveformWorkspace";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { isTauri } from "./ipc/commands";
+import { isTauri, pickAudioFile, pickProjectFile } from "./ipc/commands";
 import { onAnalysisProgress } from "./ipc/events";
 import { classifyDropPaths, isIngestible } from "./lib/dropKind";
 import { basename, extname, formatTimecode } from "./lib/format";
 import { notifyError, notifyInfo } from "./lib/notify";
 import { ensureNotificationPermission } from "./lib/osNotify";
+import { loadRecentProjects } from "./lib/recentProjects";
 import { useDropZoneStore } from "./stores/useDropZoneStore";
 import { useEditorStore } from "./stores/useEditorStore";
 import { useProjectStore } from "./stores/useProjectStore";
@@ -77,8 +83,211 @@ export default function App() {
   const exporting = useProjectStore((s) => s.exporting);
   const progress = useProjectStore((s) => s.progress);
   const project = useProjectStore((s) => s.project);
+  const ingestPath = useProjectStore((s) => s.ingestPath);
+  const openProject = useProjectStore((s) => s.openProject);
+  const closeProject = useProjectStore((s) => s.closeProject);
+  const reanalyze = useProjectStore((s) => s.reanalyze);
+  const renameProject = useProjectStore((s) => s.renameProject);
+  const deleteProject = useProjectStore((s) => s.deleteProject);
   // Empty app = just the start screen: no sidebar, inspector or clip table.
   const hasProject = project !== null;
+
+  const spotlightActions = useMemo(() => {
+    const actions: {
+      id: string;
+      label: string;
+      description?: string;
+      group?: string;
+      keywords?: string | string[];
+      leftSection?: React.ReactNode;
+      onTrigger: () => void;
+    }[] = [];
+
+    actions.push({
+      id: "import-recording",
+      label: "Import recording",
+      description: "Pick a WAV, FLAC, MP3 or M4A file",
+      group: "Actions",
+      keywords: ["audio", "file", "open"],
+      leftSection: <IconFileMusic size={16} />,
+      onTrigger: async () => {
+        try {
+          const path = await pickAudioFile();
+          if (path) await ingestPath(path);
+        } catch (err) {
+          notifyError("Could not open recording", err);
+        }
+      },
+    });
+
+    actions.push({
+      id: "open-project",
+      label: "Open project",
+      description: "Load a saved .audiobench file",
+      group: "Actions",
+      keywords: ["load", "session"],
+      leftSection: <IconFolderOpen size={16} />,
+      onTrigger: async () => {
+        try {
+          const path = await pickProjectFile();
+          if (path) await openProject(path);
+        } catch (err) {
+          notifyError("Could not open project", err);
+        }
+      },
+    });
+
+    if (hasProject) {
+      actions.push({
+        id: "reanalyze",
+        label: "Re-analyze recording",
+        description: "Re-run silence detection with current settings",
+        group: "Project",
+        onTrigger: () => {
+          modals.openConfirmModal({
+            title: "Re-run detection?",
+            children: (
+              <Text size="sm">
+                This re-splits the recording and replaces all clips and undo
+                history.
+              </Text>
+            ),
+            labels: { confirm: "Re-analyze", cancel: "Cancel" },
+            confirmProps: { color: "amber" },
+            onConfirm: () => void reanalyze(),
+          });
+        },
+      });
+
+      actions.push({
+        id: "rename-project",
+        label: "Rename project",
+        description: "Change the project display name",
+        group: "Project",
+        onTrigger: () => {
+          renameValueRef.current = project?.name ?? "";
+          modals.open({
+            title: "Rename project",
+            children: (
+              <Stack gap="sm">
+                <TextInput
+                  defaultValue={renameValueRef.current}
+                  autoFocus
+                  onChange={(e) => {
+                    renameValueRef.current = e.currentTarget.value;
+                  }}
+                />
+                <Group justify="flex-end">
+                  <Button
+                    onClick={() => {
+                      modals.closeAll();
+                      void renameProject(renameValueRef.current);
+                    }}
+                  >
+                    Save
+                  </Button>
+                </Group>
+              </Stack>
+            ),
+          });
+        },
+      });
+
+      actions.push({
+        id: "delete-project",
+        label: "Delete project",
+        description: "Remove the project file and conformed audio from disk",
+        group: "Project",
+        leftSection: <IconTrash size={16} />,
+        onTrigger: () => {
+          modals.openConfirmModal({
+            title: "Delete project?",
+            children: (
+              <Text size="sm">
+                Permanently deletes the project file and its conformed audio.
+                Cannot be undone.
+              </Text>
+            ),
+            labels: { confirm: "Delete", cancel: "Cancel" },
+            confirmProps: { color: "red" },
+            onConfirm: () => void deleteProject(),
+          });
+        },
+      });
+
+      actions.push({
+        id: "close-project",
+        label: "Close project",
+        description: "Close the current session",
+        group: "Project",
+        onTrigger: () => closeProject(),
+      });
+    }
+
+    // Recent projects
+    const recent = loadRecentProjects();
+    if (recent.length > 0) {
+      for (const entry of recent) {
+        actions.push({
+          id: `recent-${entry.path}`,
+          label: entry.name,
+          description: entry.path,
+          group: "Recent projects",
+          onTrigger: async () => {
+            try {
+              await openProject(entry.path);
+            } catch (err) {
+              notifyError("Could not open project", err);
+            }
+          },
+        });
+      }
+    }
+
+    // View
+    actions.push({
+      id: "help",
+      label: "Help",
+      description: "What every button does and keyboard shortcuts",
+      group: "View",
+      onTrigger: () => openHelp(),
+    });
+    actions.push({
+      id: "about",
+      label: "About Audio Bench",
+      description: "Credits, privacy and licence",
+      group: "View",
+      onTrigger: () => openAbout(),
+    });
+
+    // Theme
+    for (const scheme of ["auto", "light", "dark"] as const) {
+      actions.push({
+        id: `theme-${scheme}`,
+        label: `Theme: ${scheme}`,
+        group: "Theme",
+        onTrigger: () =>
+          colorScheme.setColorScheme(scheme as "light" | "dark" | "auto"),
+      });
+    }
+
+    return actions;
+  }, [
+    project,
+    hasProject,
+    ingestPath,
+    openProject,
+    closeProject,
+    reanalyze,
+    renameProject,
+    deleteProject,
+    openHelp,
+    openAbout,
+    colorScheme,
+  ]);
+
+  // TextInput import
+  // (ensure imported)
   const setProgress = useProjectStore((s) => s.setProgress);
   const undo = useProjectStore((s) => s.undo);
   const redo = useProjectStore((s) => s.redo);
@@ -95,6 +304,7 @@ export default function App() {
 
   // Bounce timer for DOM dragleave → dragover re-entry (see effect below).
   const leaveTimer = useRef<number | null>(null);
+  const renameValueRef = useRef("");
 
   // DOM drag events. On platforms where Tauri's native file drop is active
   // these mostly never fire, but they keep the overlay honest in a plain
@@ -539,6 +749,12 @@ export default function App() {
 
       <AboutModal opened={aboutOpened} onClose={closeAbout} />
       <HelpModal opened={helpOpened} onClose={closeHelp} />
+      <Spotlight
+        shortcut="mod+K"
+        actions={spotlightActions}
+        nothingFound="Nothing found"
+        searchProps={{ placeholder: "Search actions, projects..." }}
+      />
 
       {/* Splash screen */}
       {splashVisible && (

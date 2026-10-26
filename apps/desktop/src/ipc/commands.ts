@@ -111,6 +111,9 @@ export const loadProjectFile = (path: string) =>
 export const saveProjectFile = (path: string, project: unknown) =>
   call<void>("save_project", { path, project });
 
+export const deleteProjectFile = (path: string) =>
+  call<void>("delete_project", { path });
+
 export const exportClips = (request: ExportRequest) =>
   call<ExportResult>("export_clips", { request });
 

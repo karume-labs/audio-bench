@@ -32,6 +32,32 @@ pub fn save_project(path: String, project: Value) -> Result<(), BackendError> {
     Ok(())
 }
 
+/// Delete a project and its conformed audio files from disk.
+///
+/// Removes the `.audiobench` file plus the conformed master and preview
+/// WAVs referenced by it (when present). Missing files are ignored.
+#[tauri::command]
+pub fn delete_project(path: String) -> Result<(), BackendError> {
+    // Best-effort: read the project to learn which master/preview to remove.
+    if let Ok(text) = std::fs::read_to_string(&path) {
+        if let Ok(value) = serde_json::from_str::<serde_json::Value>(&text) {
+            if let Some(src) = value.get("source") {
+                for key in ["master_path", "preview_path"] {
+                    if let Some(p) = src.get(key).and_then(|v| v.as_str()) {
+                        let _ = std::fs::remove_file(p);
+                    }
+                }
+            }
+        }
+    }
+    // Always attempt to remove the project file itself.
+    match std::fs::remove_file(&path) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(BackendError::Io(e)),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

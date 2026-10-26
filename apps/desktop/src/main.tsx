@@ -9,6 +9,7 @@ import "./index.css";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/nprogress/styles.css";
+import "@mantine/spotlight/styles.css";
 
 // Bundled fonts (no network dependency).
 import "@fontsource/inter/400.css";
