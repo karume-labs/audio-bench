@@ -753,6 +753,8 @@ export default function App() {
         shortcut="mod+K"
         actions={spotlightActions}
         nothingFound="Nothing found"
+        scrollable
+        maxHeight={360}
         searchProps={{ placeholder: "Search actions, projects..." }}
       />
 
