@@ -44,6 +44,7 @@ export const DEFAULT_DETECTION: DetectionSettings = {
 export interface SourceInfo {
   originalPath: string;
   masterPath: string;
+  previewPath: string;
   durationSamples: number;
   durationSeconds: number;
   sampleRate: number;

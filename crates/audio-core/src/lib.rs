@@ -10,7 +10,7 @@ pub mod error;
 /// Public API re-exports.
 pub use conform::{
     conform_source, conform_with_warnings, decode_source, read_conformed_wav, write_conformed_wav,
-    write_pcm24_wav, ConformResult,
+    write_pcm24_wav, write_pcm16_wav, ConformResult,
 };
 pub use detect::envelope::AdaptiveThreshold;
 pub use slice::{

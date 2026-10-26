@@ -50,6 +50,7 @@ impl Default for DetectionSettings {
 pub struct SourceInfo {
     pub original_path: String,
     pub master_path: String,
+    pub preview_path: String,
     pub duration_samples: u64,
     pub duration_seconds: f64,
     pub sample_rate: u32,

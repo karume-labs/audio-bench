@@ -32,6 +32,7 @@ function WaveformWorkspace() {
 
   const project = useProjectStore((s) => s.project);
   const masterPath = project?.source.master_path ?? null;
+  const previewPath = project?.source.preview_path ?? masterPath;
   const durationSamples = project?.source.duration_samples ?? 0;
   const clips = project?.clips ?? [];
   const activeClipId = useEditorStore((s) => s.activeClipId);
@@ -59,7 +60,7 @@ function WaveformWorkspace() {
       const ws = WaveSurfer.create({
         container,
         height: waveHeightRef.current,
-        url: convertFileSrc(masterPath),
+        url: convertFileSrc(previewPath ?? masterPath),
         peaks: [peaks.positive],
         duration: durationSamples / SAMPLE_RATE,
         waveColor: wfColorsRef.current.wave,
@@ -87,8 +88,20 @@ function WaveformWorkspace() {
       ws.on("pause", stopFlags);
       ws.on("finish", stopFlags);
       ws.on("error", (err) => {
-        const message = err instanceof Error ? err.message : String(err);
-        setLoadError(message);
+        const code =
+          err && typeof err === "object" && "code" in err
+            ? (err as { code?: number }).code
+            : undefined;
+        const message =
+          err instanceof Error
+            ? err.message
+            : err && typeof err === "object" && "message" in err
+              ? String((err as { message?: unknown }).message)
+              : String(err);
+        setLoadError(
+          `Waveform failed to load (media error ${code ?? "?"}): ${message}. ` +
+            `master=${masterPath ?? "?"} preview=${previewPath ?? "?"}`,
+        );
       });
 
       regions.on("region-clicked", (region: Region, e: MouseEvent) => {
@@ -138,7 +151,7 @@ function WaveformWorkspace() {
       wsRef.current = null;
       setReady(false);
     };
-  }, [masterPath, durationSamples]);
+  }, [masterPath, previewPath, durationSamples]);
 
   // ---- Re-apply waveform colours when the colour scheme changes (no audio reload) ----
   useEffect(() => {
@@ -287,18 +300,13 @@ function WaveformWorkspace() {
     );
   }
 
-  if (loadError) {
-    return (
-      <Center h="100%" p="md">
+  return (
+    <Stack gap="xs" h="100%" p="sm" justify="center">
+      {loadError && (
         <Alert color="red" title="Waveform failed to load">
           {loadError}
         </Alert>
-      </Center>
-    );
-  }
-
-  return (
-    <Stack gap="xs" h="100%" p="sm" justify="center">
+      )}
       <Group justify="space-between">
         <Text size="sm" c="dimmed">
           Core regions (solid) · export window (shaded, 5s pad each side)

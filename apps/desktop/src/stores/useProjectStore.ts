@@ -170,6 +170,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           source: {
             original_path: result.source.originalPath,
             master_path: result.source.masterPath,
+            preview_path: result.source.previewPath,
             duration_s: result.source.durationSeconds,
             duration_samples: result.source.durationSamples,
             warnings: result.source.warnings,

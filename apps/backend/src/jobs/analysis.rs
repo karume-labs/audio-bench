@@ -18,6 +18,19 @@ pub fn master_path_for(source_path: &str) -> PathBuf {
     master
 }
 
+/// The 16-bit browser-playable preview lives next to the master as
+/// `<stem>.preview.wav`.
+pub fn preview_path_for(source_path: &str) -> PathBuf {
+    let source = Path::new(source_path);
+    let stem = source
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("audio");
+    let mut p = source.to_path_buf();
+    p.set_file_name(format!("{}.preview.wav", stem));
+    p
+}
+
 fn emit_progress(app: &tauri::AppHandle, phase: &str, pct: f32, message: &str) {
     let _ = app.emit(
         "analysis-progress",
@@ -56,6 +69,8 @@ pub fn run_analysis(
 
     let master_path = master_path_for(source_path);
     let master_str = master_path.to_string_lossy().into_owned();
+    let preview_path = preview_path_for(source_path);
+    let preview_str = preview_path.to_string_lossy().into_owned();
 
     // Reuse an existing master when it is at least as new as the source.
     let up_to_date = std::fs::metadata(&master_path)
@@ -78,11 +93,15 @@ pub fn run_analysis(
         warnings = conformed.warnings;
         audio_core::write_pcm24_wav(&conformed.samples, &master_str)
             .map_err(BackendError::Audio)?;
+        let _ = audio_core::write_pcm16_wav(&conformed.samples, &preview_str);
         emit_progress(&app, "conform", 45.0, "Conformed master written");
     }
 
     emit_progress(&app, "detect", 50.0, "Reading conformed master…");
     let master = audio_core::read_conformed_wav(&master_str).map_err(BackendError::Audio)?;
+    if !std::path::Path::new(&preview_str).exists() {
+        let _ = audio_core::write_pcm16_wav(&master, &preview_str);
+    }
     let duration_samples = master.len() as u64;
 
     emit_progress(&app, "detect", 65.0, "Detecting silence…");
@@ -127,6 +146,7 @@ pub fn run_analysis(
         source: SourceInfo {
             original_path: source_path.to_string(),
             master_path: master_str,
+            preview_path: preview_str,
             duration_samples,
             duration_seconds: duration_samples as f64 / 48_000.0,
             sample_rate: 48_000,

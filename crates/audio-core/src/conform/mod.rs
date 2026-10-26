@@ -128,6 +128,28 @@ pub fn write_conformed_wav(samples: &[f32], path: &str) -> Result<(), String> {
     write_pcm24_wav(samples, path)
 }
 
+/// Write f32 samples as a 16-bit PCM WAV (mono, 48 kHz) for browser playback.
+///
+/// Browsers cannot decode 24-bit PCM, so the conformed 24-bit master is
+/// accompanied by this 16-bit preview used only by the waveform player.
+pub fn write_pcm16_wav(samples: &[f32], path: &str) -> Result<(), String> {
+    use hound::SampleFormat;
+    let spec = hound::WavSpec {
+        channels: 1,
+        sample_rate: MASTER_SAMPLE_RATE,
+        bits_per_sample: 16,
+        sample_format: SampleFormat::Int,
+    };
+    let mut writer =
+        hound::WavWriter::create(path, spec).map_err(|e| format!("WAV create error: {}", e))?;
+    for &s in samples.iter() {
+        let q = (s.clamp(-1.0, 1.0) * 32767.0).round() as i16;
+        writer.write_sample(q).map_err(|e| format!("WAV write error: {}", e))?;
+    }
+    writer.finalize().map_err(|e| format!("WAV finalize error: {}", e))?;
+    Ok(())
+}
+
 /// Read a (conformed master) WAV file back as mono f32 samples.
 ///
 /// Handles 8/16/24/32-bit integer PCM as well as float WAVs; multi-channel

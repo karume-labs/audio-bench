@@ -41,6 +41,7 @@ export type ExportSettings = z.infer<typeof exportSettingsSchema>;
 export const sourceSchema = z.object({
   original_path: z.string(),
   master_path: z.string(),
+  preview_path: z.string().optional(),
   duration_s: z.number(),
   duration_samples: z.number().int().nonnegative().optional(),
   checksum: z.string().optional(),
