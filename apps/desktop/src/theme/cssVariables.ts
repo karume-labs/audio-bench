@@ -17,6 +17,11 @@ export const cssVariablesResolver = (_theme: MantineTheme) => ({
     "--ab-cut-line": amber[6],
     "--ab-playhead": rose[6],
     "--ab-dropzone-scrim": "rgba(26, 26, 29, 0.40)",
+    // Tooltip = inverse chip: dark surface, light text. Mantine's default
+    // falls back to `gray-2`, which in our custom scale is near-white and
+    // would render a white tooltip in dark mode.
+    "--tooltip-bg": dark[6],
+    "--tooltip-color": dark[0],
   },
   dark: {
     "--mantine-color-body": dark[7],
@@ -27,5 +32,7 @@ export const cssVariablesResolver = (_theme: MantineTheme) => ({
     "--ab-cut-line": amber[4],
     "--ab-playhead": rose[5],
     "--ab-dropzone-scrim": "rgba(8, 8, 10, 0.66)",
+    "--tooltip-bg": dark[5],
+    "--tooltip-color": dark[0],
   },
 });

@@ -74,6 +74,11 @@ export const theme = createTheme({
     },
     Tooltip: {
       defaultProps: { openDelay: 300, withArrow: true },
+      // A hairline edge so the chip separates from whatever it floats over;
+      // the border token flips with the scheme.
+      styles: {
+        tooltip: { border: "1px solid var(--mantine-color-default-border)" },
+      },
     },
     Kbd: { defaultProps: { ff: "monospace" } },
     Code: { defaultProps: { ff: "monospace" } },
