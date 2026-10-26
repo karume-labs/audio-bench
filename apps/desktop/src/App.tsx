@@ -1,9 +1,7 @@
-import { AboutModal } from "@/components/AboutModal";
 import { AppHeader } from "@/components/AppHeader";
+import { AppOverlays } from "@/components/AppOverlays";
 import { ClipInspector } from "@/components/ClipInspector";
 import { ClipTable } from "@/components/ClipTable";
-import { DropzoneOverlay } from "@/components/DropzoneOverlay";
-import { HelpModal } from "@/components/HelpModal";
 import { ProjectSidebar } from "@/components/ProjectSidebar";
 import { StartScreen } from "@/components/StartScreen";
 import { WaveformWorkspace } from "@/components/WaveformWorkspace";
@@ -11,14 +9,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { onAnalysisProgress } from "@/ipc/events";
 import { ensureNotificationPermission } from "@/lib/osNotify";
 import { useProjectStore } from "@/stores/useProjectStore";
-import {
-  AppShell,
-  Drawer,
-  Stack,
-  Text,
-  Title,
-  useMantineColorScheme,
-} from "@mantine/core";
+import { AppShell, Stack, useMantineColorScheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { nprogress } from "@mantine/nprogress";
 import { Spotlight } from "@mantine/spotlight";
@@ -162,19 +153,16 @@ export const App = () => {
         </AppShell.Main>
       </AppShell>
 
-      <Drawer
-        opened={inspectorOpened}
-        onClose={closeInspector}
-        position="right"
-        size="85%"
-        title="Clip inspector"
-        hiddenFrom="md"
-      >
-        <ClipInspector />
-      </Drawer>
+      <AppOverlays
+        splashVisible={splashVisible}
+        inspectorOpened={inspectorOpened}
+        closeInspector={closeInspector}
+        aboutOpened={aboutOpened}
+        closeAbout={closeAbout}
+        helpOpened={helpOpened}
+        closeHelp={closeHelp}
+      />
 
-      <AboutModal opened={aboutOpened} onClose={closeAbout} />
-      <HelpModal opened={helpOpened} onClose={closeHelp} />
       <Spotlight
         shortcut="mod+K"
         actions={spotlightActions}
@@ -183,47 +171,6 @@ export const App = () => {
         maxHeight={360}
         searchProps={{ placeholder: "Search actions, projects..." }}
       />
-
-      {/* Splash screen */}
-      {splashVisible && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 24,
-            padding: 32,
-            background: "var(--mantine-color-dark-7)",
-            transition: "opacity 300ms ease-out",
-            opacity: splashVisible ? 1 : 0,
-          }}
-        >
-          <img
-            src="/logo.png"
-            alt="audio-bench"
-            width={96}
-            height="auto"
-            style={{ display: "block" }}
-          />
-          <Title
-            order={2}
-            style={{ fontFamily: "Space Grotesk, sans-serif", fontWeight: 700 }}
-          >
-            Audio Bench
-          </Title>
-          <Text size="sm" c="dimmed">
-            Audio workstation
-          </Text>
-        </div>
-      )}
-
-      {/* Window-level drop overlay (scrim + dashed drop area). Always
-          mounted so show/hide both animate; hidden state is inert. */}
-      <DropzoneOverlay />
     </div>
   );
 };
