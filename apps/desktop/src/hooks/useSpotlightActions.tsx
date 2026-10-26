@@ -1,12 +1,11 @@
+import { pickAudioFile, pickProjectFile } from "@/ipc/commands";
+import { notifyError } from "@/lib/notify";
+import { loadRecentProjects } from "@/lib/recentProjects";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconFileMusic, IconFolderOpen, IconTrash } from "@tabler/icons-react";
 import { useMemo } from "react";
-import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
-import { pickAudioFile, pickProjectFile } from "@/ipc/commands";
-import { classifyDropPaths } from "@/lib/dropKind";
-import { loadRecentProjects } from "@/lib/recentProjects";
-import { notifyError } from "@/lib/notify";
-import { useProjectStore } from "@/stores/useProjectStore";
 
 /**
  * Builds the Spotlight action list. Kept in its own module so App.tsx stays
@@ -216,4 +215,3 @@ export function useSpotlightActions(
     colorScheme,
   ]);
 }
-PY

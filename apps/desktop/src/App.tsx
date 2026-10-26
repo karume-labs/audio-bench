@@ -8,14 +8,10 @@ import { StartScreen } from "@/components/StartScreen";
 import { Tip } from "@/components/Tip";
 import { WaveformWorkspace } from "@/components/WaveformWorkspace";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { isTauri } from "@/ipc/commands";
 import { onAnalysisProgress } from "@/ipc/events";
-import { classifyDropPaths, isIngestible } from "@/lib/dropKind";
-import { basename, extname, formatTimecode } from "@/lib/format";
-import { notifyError, notifyInfo } from "@/lib/notify";
+import { formatTimecode } from "@/lib/format";
+import { notifyInfo } from "@/lib/notify";
 import { ensureNotificationPermission } from "@/lib/osNotify";
-import { loadRecentProjects } from "@/lib/recentProjects";
-import { useDropZoneStore } from "@/stores/useDropZoneStore";
 import { useEditorStore } from "@/stores/useEditorStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import {
@@ -30,13 +26,11 @@ import {
   SegmentedControl,
   Stack,
   Text,
-  TextInput,
   Title,
   UnstyledButton,
   useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
 import { nprogress } from "@mantine/nprogress";
 import { Spotlight } from "@mantine/spotlight";
 import {
@@ -48,8 +42,8 @@ import {
   IconMoon,
   IconSunHigh,
 } from "@tabler/icons-react";
-import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useFileDrop } from "./hooks/useFileDrop";
 import { useSpotlightActions } from "./hooks/useSpotlightActions";
 
 export const App = () => {
@@ -80,19 +74,15 @@ export const App = () => {
   const exporting = useProjectStore((s) => s.exporting);
   const progress = useProjectStore((s) => s.progress);
   const project = useProjectStore((s) => s.project);
-  const ingestPath = useProjectStore((s) => s.ingestPath);
-  const openProject = useProjectStore((s) => s.openProject);
-  const closeProject = useProjectStore((s) => s.closeProject);
-  const reanalyze = useProjectStore((s) => s.reanalyze);
-  const renameProject = useProjectStore((s) => s.renameProject);
-  const deleteProject = useProjectStore((s) => s.deleteProject);
   // Empty app = just the start screen: no sidebar, inspector or clip table.
   const hasProject = project !== null;
 
-  const spotlightActions = useSpotlightActions(openHelp, openAbout, colorScheme);
+  const spotlightActions = useSpotlightActions(
+    openHelp,
+    openAbout,
+    colorScheme,
+  );
 
-  // TextInput import
-  // (ensure imported)
   const setProgress = useProjectStore((s) => s.setProgress);
   const undo = useProjectStore((s) => s.undo);
   const redo = useProjectStore((s) => s.redo);
@@ -107,70 +97,7 @@ export const App = () => {
     void ensureNotificationPermission();
   }, []);
 
-  // Bounce timer for DOM dragleave → dragover re-entry (see effect below).
-  const leaveTimer = useRef<number | null>(null);
-  const renameValueRef = useRef("");
-
-  // DOM drag events. On platforms where Tauri's native file drop is active
-  // these mostly never fire, but they keep the overlay honest in a plain
-  // browser and whenever the webview surfaces them. Only real file drags
-  // count - text selections and in-app element drags are ignored.
-  useEffect(() => {
-    const clearLeaveTimer = (): void => {
-      if (leaveTimer.current !== null) {
-        window.clearTimeout(leaveTimer.current);
-        leaveTimer.current = null;
-      }
-    };
-
-    const hasFiles = (e: DragEvent): boolean =>
-      Array.from(e.dataTransfer?.types ?? []).includes("Files");
-
-    const onDragOver = (e: DragEvent): void => {
-      if (!hasFiles(e)) return;
-      e.preventDefault();
-      // Re-entering any child element cancels a pending hide, so the
-      // overlay never flickers while the cursor moves across the window.
-      clearLeaveTimer();
-      // `files` is often empty during dragover (browsers withhold the list
-      // until drop), so classify only when names are actually readable and
-      // keep the previous kind otherwise - but never let a stale kind stick
-      // once the dragged set becomes known.
-      const names = Array.from(e.dataTransfer?.files ?? []).map((f) => f.name);
-      const kind = names.length > 0 ? classifyDropPaths(names) : null;
-      const state = useDropZoneStore.getState();
-      if (!state.isDragging) {
-        state.startDrag(kind ?? "none");
-      } else if (kind !== null && kind !== state.dropKind) {
-        state.setDropKind(kind);
-      }
-    };
-
-    const onDragLeave = (): void => {
-      if (!useDropZoneStore.getState().isDragging) return;
-      clearLeaveTimer();
-      leaveTimer.current = window.setTimeout(() => {
-        leaveTimer.current = null;
-        useDropZoneStore.getState().dismiss();
-      }, 150);
-    };
-
-    const onDrop = (e: DragEvent): void => {
-      clearLeaveTimer();
-      useDropZoneStore.getState().dismiss();
-      e.preventDefault();
-    };
-
-    document.addEventListener("dragover", onDragOver);
-    document.addEventListener("dragleave", onDragLeave);
-    document.addEventListener("drop", onDrop);
-    return () => {
-      clearLeaveTimer();
-      document.removeEventListener("dragover", onDragOver);
-      document.removeEventListener("dragleave", onDragLeave);
-      document.removeEventListener("drop", onDrop);
-    };
-  }, []);
+  useFileDrop();
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -195,111 +122,6 @@ export const App = () => {
     if (busy || exporting) nprogress.start();
     else nprogress.complete();
   }, [busy, exporting]);
-
-  // Native Tauri file drop: enter/over/leave drive the overlay, drop feeds
-  // the same ingest pipeline the Import / Open buttons use. Every store
-  // read goes through getState() so the listener never sees stale state.
-  useEffect(() => {
-    if (!isTauri()) return;
-    let disposed = false;
-    let unlisten: (() => void) | undefined;
-
-    const handleDropPaths = (paths: string[]): void => {
-      const { busy, exporting, project, ingestPath } =
-        useProjectStore.getState();
-
-      if (busy || exporting) {
-        notifyInfo(
-          "Still busy",
-          "Analysis or export is running - drop the files again when it finishes.",
-        );
-        return;
-      }
-
-      const kind = classifyDropPaths(paths);
-      if (kind === "none" || kind === "unsupported" || kind === "multiple") {
-        // The drag overlay deliberately stays generic - this toast is where
-        // an unusable drop gets explained.
-        notifyError(
-          kind === "multiple"
-            ? "Too many files"
-            : kind === "unsupported"
-              ? "Unsupported file type"
-              : "Nothing to open",
-          kind === "multiple"
-            ? "Drop one recording (optionally with its project file) at a time."
-            : `Audio Bench opens WAV, FLAC, MP3, M4A recordings and .audiobench projects. Got: ${paths
-                .map(basename)
-                .join(", ")}`,
-        );
-        return;
-      }
-
-      const target =
-        paths.find((p) => extname(p) === "audiobench") ??
-        paths.find(isIngestible);
-      if (!target) return;
-
-      if (!project) {
-        void ingestPath(target);
-        return;
-      }
-
-      const openName = project.name ?? basename(project.source.original_path);
-      modals.openConfirmModal({
-        title: "Replace the open session?",
-        children: (
-          <Stack gap="xs">
-            <Text size="sm">
-              Open <b>{basename(target)}</b> while <b>{openName}</b> is open?
-            </Text>
-            <Text size="sm" c="dimmed">
-              The current session is closed first. Your edits are already
-              autosaved to the project file on disk, but the in-memory undo
-              history is discarded.
-            </Text>
-          </Stack>
-        ),
-        labels: { confirm: "Replace", cancel: "Cancel" },
-        onConfirm: () => {
-          void ingestPath(target);
-        },
-      });
-    };
-
-    void getCurrentWebview()
-      .onDragDropEvent((event) => {
-        const payload = event.payload;
-        if (payload.type === "enter") {
-          useDropZoneStore
-            .getState()
-            .startDrag(classifyDropPaths(payload.paths));
-          return;
-        }
-        if (payload.type === "over") {
-          const state = useDropZoneStore.getState();
-          if (!state.isDragging) state.startDrag();
-          return;
-        }
-        if (payload.type === "leave") {
-          useDropZoneStore.getState().dismiss();
-          return;
-        }
-        // payload.type === "drop"
-        useDropZoneStore.getState().dismiss();
-        if (payload.paths.length > 0) handleDropPaths(payload.paths);
-      })
-      .then((fn) => {
-        if (disposed) fn();
-        else unlisten = fn;
-      })
-      .catch((err) => notifyError("Drag & drop unavailable", err));
-
-    return () => {
-      disposed = true;
-      unlisten?.();
-    };
-  }, []);
 
   const onDropHint = (): void => {
     notifyInfo(
