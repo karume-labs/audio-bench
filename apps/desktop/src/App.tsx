@@ -35,6 +35,7 @@ import ClipTable from "./components/ClipTable";
 import DropzoneOverlay from "./components/DropzoneOverlay";
 import HelpModal from "./components/HelpModal";
 import ProjectSidebar from "./components/ProjectSidebar";
+import StartScreen from "./components/StartScreen";
 import Tip from "./components/Tip";
 import WaveformWorkspace from "./components/WaveformWorkspace";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -76,6 +77,8 @@ export default function App() {
   const exporting = useProjectStore((s) => s.exporting);
   const progress = useProjectStore((s) => s.progress);
   const project = useProjectStore((s) => s.project);
+  // Empty app = just the start screen: no sidebar, inspector or clip table.
+  const hasProject = project !== null;
   const setProgress = useProjectStore((s) => s.setProgress);
   const undo = useProjectStore((s) => s.undo);
   const redo = useProjectStore((s) => s.redo);
@@ -297,12 +300,12 @@ export default function App() {
         navbar={{
           width: 288,
           breakpoint: "sm",
-          collapsed: { mobile: !navbarOpened, desktop: false },
+          collapsed: { mobile: !navbarOpened, desktop: !hasProject },
         }}
         aside={{
           width: 336,
           breakpoint: "md",
-          collapsed: { mobile: true, desktop: false },
+          collapsed: { mobile: true, desktop: !hasProject },
         }}
         padding={0}
       >
@@ -464,18 +467,20 @@ export default function App() {
                   <IconInfoCircle size={16} />
                 </ActionIcon>
               </Tip>
-              <Tip
-                label="Keyboard shortcuts"
-                description="Space plays · S splits · M merges · A approves · R rejects"
-              >
-                <Group gap={6} visibleFrom="md">
-                  <Kbd size="xs">Space</Kbd>
-                  <Kbd size="xs">↑↓</Kbd>
-                  <Kbd size="xs">S</Kbd>
-                  <Kbd size="xs">M</Kbd>
-                  <Kbd size="xs">A</Kbd>
-                </Group>
-              </Tip>
+              {project && (
+                <Tip
+                  label="Keyboard shortcuts"
+                  description="Space plays · S splits · M merges · A approves · R rejects"
+                >
+                  <Group gap={6} visibleFrom="md">
+                    <Kbd size="xs">Space</Kbd>
+                    <Kbd size="xs">↑↓</Kbd>
+                    <Kbd size="xs">S</Kbd>
+                    <Kbd size="xs">M</Kbd>
+                    <Kbd size="xs">A</Kbd>
+                  </Group>
+                </Tip>
+              )}
             </Group>
           </Group>
         </AppShell.Header>
@@ -489,31 +494,35 @@ export default function App() {
         </AppShell.Aside>
 
         <AppShell.Main>
-          <Stack
-            gap={0}
-            style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}
-          >
-            <div
-              style={{
-                height: `calc(100vh - ${headerHeight}px - ${tableHeight}px)`,
-                minHeight: 200,
-                display: "flex",
-                flexDirection: "column",
-              }}
+          {hasProject ? (
+            <Stack
+              gap={0}
+              style={{ minHeight: `calc(100vh - ${headerHeight}px)` }}
             >
-              <WaveformWorkspace />
-            </div>
+              <div
+                style={{
+                  height: `calc(100vh - ${headerHeight}px - ${tableHeight}px)`,
+                  minHeight: 200,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <WaveformWorkspace />
+              </div>
 
-            <div
-              style={{
-                height: tableHeight,
-                borderTop: "1px solid var(--mantine-color-default-border)",
-                overflow: "hidden",
-              }}
-            >
-              <ClipTable />
-            </div>
-          </Stack>
+              <div
+                style={{
+                  height: tableHeight,
+                  borderTop: "1px solid var(--mantine-color-default-border)",
+                  overflow: "hidden",
+                }}
+              >
+                <ClipTable />
+              </div>
+            </Stack>
+          ) : (
+            <StartScreen headerHeight={headerHeight} />
+          )}
         </AppShell.Main>
       </AppShell>
 
