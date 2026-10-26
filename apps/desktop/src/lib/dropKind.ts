@@ -52,7 +52,7 @@ export interface DropContext {
 export interface DropCopy {
   title: string;
   hint: string;
-  /** False when the drop would be refused — drives the neutral border/icon. */
+  /** False when the drop would be refused - drives the neutral border/icon. */
   accept: boolean;
 }
 
@@ -75,7 +75,7 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
   if (ctx.busy) {
     return {
       title: "Can't add files right now",
-      hint: "Analysis or export is running — drop files again when it finishes.",
+      hint: "Analysis or export is running - drop files again when it finishes.",
       accept: false,
     };
   }
@@ -89,7 +89,7 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
     case "multiple":
       return {
         title: "One recording at a time",
-        hint: "Drop a single recording (optionally with its project file) — a session is one recording.",
+        hint: "Drop a single recording (optionally with its project file) - a session is one recording.",
         accept: false,
       };
     case "both":
@@ -102,7 +102,7 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
       return ctx.hasProject
         ? {
             title: "Drop to replace the recording",
-            hint: "You'll be asked to confirm — the open session is closed before the new one starts.",
+            hint: "You'll be asked to confirm - the open session is closed before the new one starts.",
             accept: true,
           }
         : {
@@ -114,7 +114,7 @@ export const dropCopy = (kind: DropKind, ctx: DropContext): DropCopy => {
       return ctx.hasProject
         ? {
             title: "Drop to open this project",
-            hint: "You'll be asked to confirm — the open session is replaced by this one.",
+            hint: "You'll be asked to confirm - the open session is replaced by this one.",
             accept: true,
           }
         : {

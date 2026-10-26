@@ -99,7 +99,7 @@ export default function App() {
   // DOM drag events. On platforms where Tauri's native file drop is active
   // these mostly never fire, but they keep the overlay honest in a plain
   // browser and whenever the webview surfaces them. Only real file drags
-  // count — text selections and in-app element drags are ignored.
+  // count - text selections and in-app element drags are ignored.
   useEffect(() => {
     const clearLeaveTimer = (): void => {
       if (leaveTimer.current !== null) {
@@ -119,7 +119,7 @@ export default function App() {
       clearLeaveTimer();
       // `files` is often empty during dragover (browsers withhold the list
       // until drop), so classify only when names are actually readable and
-      // keep the previous kind otherwise — but never let a stale kind stick
+      // keep the previous kind otherwise - but never let a stale kind stick
       // once the dragged set becomes known.
       const names = Array.from(e.dataTransfer?.files ?? []).map((f) => f.name);
       const kind = names.length > 0 ? classifyDropPaths(names) : null;
@@ -196,14 +196,14 @@ export default function App() {
       if (busy || exporting) {
         notifyInfo(
           "Still busy",
-          "Analysis or export is running — drop the files again when it finishes.",
+          "Analysis or export is running - drop the files again when it finishes.",
         );
         return;
       }
 
       const kind = classifyDropPaths(paths);
       if (kind === "none" || kind === "unsupported" || kind === "multiple") {
-        // The drag overlay deliberately stays generic — this toast is where
+        // The drag overlay deliberately stays generic - this toast is where
         // an unusable drop gets explained.
         notifyError(
           kind === "multiple"

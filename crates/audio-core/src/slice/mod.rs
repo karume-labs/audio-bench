@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_export_window_clamps_to_recording_end() {
-        // 1s recording cannot contain a 5s pad — window must clamp, not panic.
+        // 1s recording cannot contain a 5s pad - window must clamp, not panic.
         let window = ExportWindow::new(1000, 3000, 48000);
         assert_eq!(window.export_end, 48000);
         assert_eq!(window.duration_s, 1.0);

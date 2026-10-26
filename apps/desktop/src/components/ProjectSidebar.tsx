@@ -186,7 +186,7 @@ export default function ProjectSidebar() {
           </Tip>
           <Tip
             label="Save project"
-            description="Write the project file now — the app also autosaves after every edit."
+            description="Write the project file now - the app also autosaves after every edit."
           >
             <Button
               leftSection={<IconDeviceFloppy size={16} />}
@@ -262,7 +262,7 @@ export default function ProjectSidebar() {
                 <Text size="xs" ff="monospace">
                   {activeClipId
                     ? `#${project.clips.findIndex((c) => c.id === activeClipId) + 1}`
-                    : "—"}
+                    : "-"}
                 </Text>
               </Group>
             </Stack>
@@ -335,7 +335,7 @@ export default function ProjectSidebar() {
                   <IconDeviceFloppy size={14} />
                 </ThemeIcon>
                 <Text size="xs" ff="monospace" lineClamp={2}>
-                  {projectPath ?? "—"}
+                  {projectPath ?? "-"}
                 </Text>
               </Group>
             </Tip>

@@ -18,7 +18,7 @@ export const formatTimecode = (seconds: number): string => {
 };
 
 export const formatDuration = (seconds: number): string => {
-  if (!Number.isFinite(seconds)) return "—";
+  if (!Number.isFinite(seconds)) return "-";
   if (seconds < 60) return `${seconds.toFixed(2)}s`;
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);

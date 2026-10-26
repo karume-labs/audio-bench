@@ -267,7 +267,7 @@ function WaveformWorkspace() {
     try {
       ws.zoom(zoom);
     } catch {
-      // not loaded yet — ignore
+      // not loaded yet - ignore
     }
   }, [ready, zoom]);
 

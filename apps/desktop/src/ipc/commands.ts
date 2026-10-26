@@ -8,7 +8,7 @@ const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   if (!isTauri()) {
     return Promise.reject(
       new Error(
-        "Not running inside Tauri — start the app with `bun run tauri dev`",
+        "Not running inside Tauri - start the app with `bun run tauri dev`",
       ),
     );
   }

@@ -1,7 +1,7 @@
 /**
  * Generates a 5-second fixture audio file for local development:
  *
- *   fixtures/test_session.wav  44.1 kHz stereo 16-bit PCM — two short
+ *   fixtures/test_session.wav  44.1 kHz stereo 16-bit PCM - two short
  *                              speech-like bursts separated by silence.
  *
  * Run: bun tools/make-fixtures.ts

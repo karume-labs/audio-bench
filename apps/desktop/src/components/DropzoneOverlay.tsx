@@ -10,7 +10,7 @@ import { useProjectStore } from "../stores/useProjectStore";
  *
  * Structure mirrors Claude's file drop: a neutral scrim over the whole
  * window with one inset, rounded, dashed drop area containing an icon, a
- * title and a single-line hint. Everything is opaque — the scrim is a
+ * title and a single-line hint. Everything is opaque - the scrim is a
  * separate background layer so the copy never sits on a translucent colour.
  *
  * Teal appears only as the dashed border and the icon; every surface and

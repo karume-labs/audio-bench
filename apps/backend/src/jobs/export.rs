@@ -64,7 +64,7 @@ pub fn run_export(request: &ExportRequest) -> Result<ExportResult, BackendError>
         filenames.push(clip.filename.clone());
     }
 
-    // The CSV content comes verbatim from the TS layer — do not reformat.
+    // The CSV content comes verbatim from the TS layer - do not reformat.
     std::fs::write(out_dir.join("manifest.csv"), request.manifest_csv.as_bytes())?;
     std::fs::write(out_dir.join("alignment_report.csv"), request.report_csv.as_bytes())?;
 

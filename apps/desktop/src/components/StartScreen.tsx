@@ -57,7 +57,7 @@ export default function StartScreen({
         <div>
           <Title order={2}>Audio Bench</Title>
           <Text size="sm" c="dimmed" mt={6}>
-            Split long recordings into export-ready, perfectly named clips —
+            Split long recordings into export-ready, perfectly named clips -
             entirely on your machine.
           </Text>
         </div>

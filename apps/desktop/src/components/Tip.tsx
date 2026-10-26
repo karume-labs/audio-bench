@@ -15,7 +15,7 @@ export interface TipProps {
  *
  * Renders a one-line label, or a bold label plus a dimmed description when
  * `description` is given. Disabled controls do not emit mouse events, so
- * those children are wrapped in a span — otherwise the tooltip could never
+ * those children are wrapped in a span - otherwise the tooltip could never
  * explain why a button is greyed out.
  */
 export default function Tip({

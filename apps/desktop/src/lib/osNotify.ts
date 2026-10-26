@@ -31,7 +31,7 @@ export const ensureNotificationPermission = async (): Promise<boolean> => {
 
 /**
  * Send an OS-level desktop notification only when the app window is NOT
- * focused — so users who are actively looking at the app get the in-app
+ * focused - so users who are actively looking at the app get the in-app
  * toast instead of a duplicate OS popup. Works on Windows/macOS/Linux.
  */
 export const notifyOsIfUnfocused = async (

@@ -18,7 +18,7 @@ pub struct AdaptiveThreshold {
     /// deriving clips from the complement of the returned silence regions)
     pub min_clip_ms: f32,
     /// Maximum speech/clip duration in milliseconds (retained as detection
-    /// profile metadata; silence regions are never dropped for being long —
+    /// profile metadata; silence regions are never dropped for being long -
     /// a 30s lead-in silence is still a valid cut boundary)
     pub max_clip_ms: f32,
     /// Percentile used to estimate the noise floor (e.g., 10th percentile)
@@ -148,7 +148,7 @@ impl AdaptiveThreshold {
                 in_silence = true;
                 silence_start = frame_start;
             } else if is_speech && in_silence {
-                // End of a silence region — keep it when it is long enough.
+                // End of a silence region - keep it when it is long enough.
                 // There is deliberately no upper bound here.
                 let silence_duration = frame_end - silence_start;
                 if silence_duration >= min_silence_samples {

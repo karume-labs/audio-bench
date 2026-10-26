@@ -21,7 +21,7 @@ const BUTTON_HELP: Array<[name: string, description: string]> = [
   ],
   [
     "Save",
-    "Write the project file immediately — the app also autosaves after every edit.",
+    "Write the project file immediately - the app also autosaves after every edit.",
   ],
   [
     "Export clips",
@@ -69,7 +69,7 @@ const KEY_HELP: Array<[keys: string[], description: string]> = [
   [["Ctrl", "Y"], "Redo"],
   [
     ["Esc"],
-    "Dismiss the drop overlay — or close the open project (asks first)",
+    "Dismiss the drop overlay - or close the open project (asks first)",
   ],
 ];
 
@@ -93,8 +93,8 @@ export default function HelpModal({ opened, onClose }: HelpModalProps) {
             The workflow
           </Text>
           <Text size="sm" c="dimmed">
-            Import a recording — review the detected clips on the waveform and
-            in the table — then export the approved clips with their manifest.
+            Import a recording - review the detected clips on the waveform and
+            in the table - then export the approved clips with their manifest.
             Everything runs locally on your machine.
           </Text>
         </div>

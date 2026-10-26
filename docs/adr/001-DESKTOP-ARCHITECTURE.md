@@ -1,4 +1,4 @@
-# ADR 001: Desktop Architecture — Decoupled Monorepo
+# ADR 001: Desktop Architecture - Decoupled Monorepo
 
 **Status:** Accepted
 **Date:** 2026-10-21
@@ -40,8 +40,8 @@ Rules:
 
 ## Alternatives Considered
 
-* **Single Tauri app with Rust business logic** — rejected: the alignment rules are
+* **Single Tauri app with Rust business logic** - rejected: the alignment rules are
   string/table heavy and iterate constantly during review; TS + Zod keeps them data-driven
   and hot-reloadable.
-* **WASM audio engine in the frontend** — rejected for MVP: peak generation and slicing
+* **WASM audio engine in the frontend** - rejected for MVP: peak generation and slicing
   are already fast in native Rust, and WASM would complicate the 24-bit PCM file I/O.

@@ -76,7 +76,7 @@ export default function AboutModal({ opened, onClose }: AboutModalProps) {
 
         <Text size="sm" c="dimmed">
           A local, keyboard-driven audio workstation. It splits long voice
-          recordings into export-ready, perfectly named clips — entirely on your
+          recordings into export-ready, perfectly named clips - entirely on your
           machine. No cloud uploads, no transcription, no data leaves your
           drive.
         </Text>
@@ -108,7 +108,7 @@ export default function AboutModal({ opened, onClose }: AboutModalProps) {
             Developer
           </Text>
           <Text size="sm" c="dimmed">
-            Powered by coffee and sleepless nights —{" "}
+            Powered by coffee and sleepless nights -{" "}
             <Text span fw={600} c="teal">
               karume-lab.
             </Text>

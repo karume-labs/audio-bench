@@ -45,7 +45,7 @@ pub fn conform_source(path: &str) -> Result<(Vec<f32>, u32, f32), String> {
 /// Like [`conform_source`] but also reports warnings:
 /// - strongly anti-correlated stereo channels (downmix cancellation)
 /// - post-resample peaks above full scale (PRD §4: reported, never lowered
-///   silently — the master is clamped to valid PCM on write).
+///   silently - the master is clamped to valid PCM on write).
 pub fn conform_with_warnings(path: &str) -> Result<ConformResult, String> {
     // 1. Decode to interleaved f32.
     let (interleaved, channels, sr) = decode_source(path)?;

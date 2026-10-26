@@ -65,7 +65,7 @@ export const mergeClipWithNext = (clips: Clip[], clipId: string): Clip[] => {
 
   const first = ordered[pos];
   const second = ordered[pos + 1];
-  if (!second) throw new Error("This is the last clip — nothing to merge with");
+  if (!second) throw new Error("This is the last clip - nothing to merge with");
   if (first.status === "rejected" || second.status === "rejected") {
     throw new Error("Cannot merge a rejected clip");
   }
@@ -88,7 +88,7 @@ export const mergeClipWithNext = (clips: Clip[], clipId: string): Clip[] => {
   return next;
 };
 
-/** Reject a clip (cough/noise) — excluded from exports. */
+/** Reject a clip (cough/noise) - excluded from exports. */
 export const rejectClip = (clips: Clip[], clipId: string): Clip[] =>
   clips.map((c) => (c.id === clipId ? { ...c, status: "rejected" } : c));
 

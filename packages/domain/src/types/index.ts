@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ==========================================
 // ID Pattern (kept for backward compat with old project files; no longer
-// used for script validation — there is no script anymore).
+// used for script validation - there is no script anymore).
 // ==========================================
 
 /// The naming template for exported files

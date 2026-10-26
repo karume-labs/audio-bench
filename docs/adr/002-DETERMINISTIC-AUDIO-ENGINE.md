@@ -7,14 +7,14 @@
 
 The product's core risk is **alignment drift**: ~500 spoken sentences must map to script
 IDs, and one missed or extra split shifts every ID after it. The tool must therefore be
-predictable — the same inputs always produce the same cuts, the same names, and the same
+predictable - the same inputs always produce the same cuts, the same names, and the same
 manifest, or the count gate becomes useless.
 
 ## Decision
 
 1. **One conformed master.** On import the source is decoded (Symphonia/Hound), downmixed
    to mono, and resampled to a single 24-bit / 48 kHz / mono PCM WAV. Every timestamp in
-   the app — UI, project file, manifest, export slicing — is an **integer sample index**
+   the app - UI, project file, manifest, export slicing - is an **integer sample index**
    on that master. Float seconds never cross a storage or IPC boundary except for
    display.
 
@@ -39,11 +39,11 @@ manifest, or the count gate becomes useless.
    * pinned lines are skipped by the sequential walk;
    * clips running past the end of the script become unassigned extras.
 
-   There is no incremental "patch the mapping" path — the whole mapping is derived, so
+   There is no incremental "patch the mapping" path - the whole mapping is derived, so
    a split always shifts later IDs by exactly +1 and a merge by exactly −1.
 
 6. **Detection is bounded by config, not heuristics.** Silence regions at or above
-   `min_silence_ms` are always cut boundaries (no upper bound — a 30 s lead-in silence
+   `min_silence_ms` are always cut boundaries (no upper bound - a 30 s lead-in silence
    still splits the take). Thresholds come from the frame-RMS noise floor estimate.
 
 ## Consequences
@@ -57,10 +57,10 @@ manifest, or the count gate becomes useless.
 
 ## Alternatives Considered
 
-* **Store export windows in the project** — rejected: changing pad settings would require
+* **Store export windows in the project** - rejected: changing pad settings would require
   rewriting every clip, and stale windows would silently export the wrong audio.
-* **Incremental ID re-assignment after edits** — rejected: hard to reason about, and any
+* **Incremental ID re-assignment after edits** - rejected: hard to reason about, and any
   missed branch produces exactly the drift this tool exists to prevent.
-* **Silence-region upper bound (drop >10 s silences)** — rejected: long lead-in or
+* **Silence-region upper bound (drop >10 s silences)** - rejected: long lead-in or
   pause-with-recording still marks a real cut boundary; dropping it desynchronizes every
   following ID.

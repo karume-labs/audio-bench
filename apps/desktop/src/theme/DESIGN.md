@@ -1,12 +1,12 @@
-# Design System — audio-bench desktop
+# Design System - audio-bench desktop
 
 This document describes the Mantine theme and design tokens for `apps/desktop`.
 All feature code must use these tokens instead of hard-coding colours, fonts, spacing or radii.
 
 ## Location
 
-- `apps/desktop/src/theme/` — theme modules, exported from `index.ts`.
-- `apps/desktop/src/main.tsx` — provider wiring (theme, cssVariablesResolver, dark default, fonts).
+- `apps/desktop/src/theme/` - theme modules, exported from `index.ts`.
+- `apps/desktop/src/main.tsx` - provider wiring (theme, cssVariablesResolver, dark default, fonts).
 
 ## Colours
 
@@ -33,7 +33,7 @@ Primary colour is `teal`. Primary shade: 6 (light), 4 (dark). Auto-contrast is o
 - UI: Inter. Headings/wordmark: Space Grotesk 700. Mono: JetBrains Mono.
 - Compact scale: xs 11px, sm 12px, md 13px (base), lg 15px, xl 18px.
 - Headings: h1 28, h2 22, h3 18, h4 15, h5 13, h6 11.
-- Mono is mandatory for script IDs, timestamps, sample indices and file names. IDs are strings with leading zeros — never format as numbers.
+- Mono is mandatory for script IDs, timestamps, sample indices and file names. IDs are strings with leading zeros - never format as numbers.
 
 ## Spacing, radius, depth
 
@@ -49,7 +49,7 @@ Primary colour is `teal`. Primary shade: 6 (light), 4 (dark). Auto-contrast is o
 - Paper: bordered, radius md, no shadow.
 - Inputs (TextInput, NumberInput, Select, SegmentedControl): size sm.
 - Table: compact, sticky header on recessed colour, hover highlight, selected row = teal left edge, IDs in mono.
-- Modal: centered, dimmed overlay with slight blur — only for destructive confirms and export settings.
+- Modal: centered, dimmed overlay with slight blur - only for destructive confirms and export settings.
 - Tooltip: 300ms open delay, with arrow.
 - Kbd and Code: mono font.
 - Visible focus ring everywhere.

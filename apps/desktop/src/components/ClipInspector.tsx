@@ -98,7 +98,7 @@ export default function ClipInspector() {
 
         {flags.includes("edge_clamped") && (
           <Alert color="yellow" title="Edge clamped">
-            The export window runs into the recording edge — silence will be
+            The export window runs into the recording edge - silence will be
             padded to guarantee the full 5s lead-in/out.
           </Alert>
         )}
@@ -180,7 +180,7 @@ export default function ClipInspector() {
         <Group gap="xs">
           <Tip
             label="Merge with next"
-            description="Join this clip with the one after it — useful when a pause was cut in the middle of a line."
+            description="Join this clip with the one after it - useful when a pause was cut in the middle of a line."
           >
             <Button
               size="xs"

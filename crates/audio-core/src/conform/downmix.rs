@@ -55,7 +55,7 @@ pub fn stereo_correlation(interleaved: &[f32], channels: u16, frame_stride: usiz
 
     let denom = ((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)).sqrt();
     if denom <= f64::EPSILON {
-        // One (or both) channels are constant — no meaningful correlation.
+        // One (or both) channels are constant - no meaningful correlation.
         return 0.0;
     }
 

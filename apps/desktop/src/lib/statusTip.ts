@@ -1,7 +1,7 @@
 /** Human-readable meaning of each clip status, for tooltips. */
 export const STATUS_TIP: Record<string, string> = {
-  proposed: "Detected but not reviewed yet — included in the export.",
-  approved: "Reviewed and confirmed — included in the export.",
+  proposed: "Detected but not reviewed yet - included in the export.",
+  approved: "Reviewed and confirmed - included in the export.",
   rejected: "Excluded from the export until you restore it.",
 };
 

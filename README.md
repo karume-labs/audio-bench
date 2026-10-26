@@ -56,7 +56,7 @@ This launches the Vite dev server on `localhost:1420` and starts the Tauri Rust 
 ### Source Recording
 - Format: WAV/FLAC/MP3/M4A per session (~up to ~100 MB, ~45 minutes)
 - Ingestion: Read directly from OS filesystem via Tauri (no upload)
-- No transcription or reference script is used — clips are detected purely from audio.
+- No transcription or reference script is used - clips are detected purely from audio.
 
 ## Outputs
 
@@ -116,7 +116,7 @@ cargo check --workspace --all-targets   # must be warning-free
 cargo test --workspace
 ```
 
-Fixtures are **generated, not committed** — `fixtures/` is gitignored (the WAV alone is
+Fixtures are **generated, not committed** - `fixtures/` is gitignored (the WAV alone is
 7.5 MB) and `bun tools/make-fixtures.ts` recreates both files deterministically.
 
 ### Notes
