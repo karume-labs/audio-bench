@@ -71,6 +71,16 @@ impl AdaptiveThreshold {
     ///    least `min_silence_ms` long (no upper bound: long lead-in/trailing
     ///    silences are cut boundaries too)
     pub fn detect_silence(&self, samples: &[f32]) -> Vec<(usize, usize)> {
+        self.detect_silence_with_floor(samples, self.min_silence_ms)
+    }
+
+    /// Detect silence regions using an explicit minimum-silence floor (ms).
+    /// Used by the auto-tuning path to first enumerate every candidate gap.
+    pub fn detect_silence_with_floor(
+        &self,
+        samples: &[f32],
+        min_silence_ms: f32,
+    ) -> Vec<(usize, usize)> {
         if samples.is_empty() {
             return Vec::new();
         }
@@ -135,7 +145,7 @@ impl AdaptiveThreshold {
         }
 
         // 5. Merge contiguous silence into regions.
-        let min_silence_samples = (self.min_silence_ms / 1000.0 * 48000.0) as usize;
+        let min_silence_samples = (min_silence_ms / 1000.0 * 48000.0) as usize;
         let mut silence_regions: Vec<(usize, usize)> = Vec::new();
         let mut in_silence = false;
         let mut silence_start = 0;
@@ -167,6 +177,53 @@ impl AdaptiveThreshold {
 
         silence_regions
     }
+
+    /// Detect silence with an auto-tuned minimum-silence floor.
+    ///
+    /// First enumerates every candidate gap (floor 100 ms) and derives a
+    /// data-driven threshold from the gap-duration distribution (largest
+    /// relative jump between sorted gaps, clamped to 300..=3000 ms). Falls
+    /// back to 1500 ms when no clear split exists.
+    pub fn detect_silence_auto(&self, samples: &[f32]) -> (Vec<(usize, usize)>, f32) {
+        let raw = self.detect_silence_with_floor(samples, 100.0);
+        let mut durations_ms: Vec<f32> = raw
+            .iter()
+            .map(|(s, e)| (*e as f32 - *s as f32) / 48.0)
+            .collect();
+        durations_ms.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let auto_ms = auto_min_silence_ms(&durations_ms);
+        let regions = self.detect_silence_with_floor(samples, auto_ms);
+        (regions, auto_ms)
+    }
+}
+
+/// Data-driven minimum-silence estimate from a sorted-by-duration gap list.
+fn auto_min_silence_ms(sorted_ms: &[f32]) -> f32 {
+    if sorted_ms.len() < 2 {
+        return 1500.0;
+    }
+    // Largest relative jump between consecutive gap durations.
+    let mut best_idx = 0usize;
+    let mut best_ratio = 1.0f32;
+    for i in 1..sorted_ms.len() {
+        let prev = sorted_ms[i - 1].max(1.0);
+        let ratio = sorted_ms[i] / prev;
+        if ratio > best_ratio {
+            best_ratio = ratio;
+            best_idx = i;
+        }
+    }
+    if best_ratio < 1.5 {
+        return 1500.0;
+    }
+    let lo = if best_idx == 0 {
+        sorted_ms[0]
+    } else {
+        sorted_ms[best_idx - 1]
+    };
+    let hi = sorted_ms[best_idx];
+    let val = (lo + hi) / 2.0;
+    val.clamp(300.0, 3000.0)
 }
 
 #[cfg(test)]

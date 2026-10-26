@@ -86,16 +86,32 @@ pub fn run_analysis(
     let duration_samples = master.len() as u64;
 
     emit_progress(&app, "detect", 65.0, "Detecting silence…");
-    let detector = audio_core::AdaptiveThreshold::new(
-        settings.frame_ms,
-        settings.overlap_ms,
-        settings.margin_db,
-        settings.min_silence_ms,
-        settings.min_clip_ms,
-        settings.max_clip_ms,
-        settings.noise_floor_pctl,
-    );
-    let silence = detector.detect_silence(&master);
+    let (silence, resolved_min_silence_ms) = match settings.min_silence_ms {
+        Some(v) => {
+            let detector = audio_core::AdaptiveThreshold::new(
+                settings.frame_ms,
+                settings.overlap_ms,
+                settings.margin_db,
+                v,
+                settings.min_clip_ms,
+                settings.max_clip_ms,
+                settings.noise_floor_pctl,
+            );
+            (detector.detect_silence(&master), v)
+        }
+        None => {
+            let detector = audio_core::AdaptiveThreshold::new(
+                settings.frame_ms,
+                settings.overlap_ms,
+                settings.margin_db,
+                1500.0,
+                settings.min_clip_ms,
+                settings.max_clip_ms,
+                settings.noise_floor_pctl,
+            );
+            detector.detect_silence_auto(&master)
+        }
+    };
 
     emit_progress(&app, "detect", 90.0, "Deriving clip boundaries…");
     let clips = derive_clips(&silence, duration_samples, settings);
@@ -118,6 +134,7 @@ pub fn run_analysis(
             warnings,
         },
         clips,
+        min_silence_ms: resolved_min_silence_ms,
     })
 }
 

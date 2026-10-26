@@ -67,8 +67,13 @@ interface ProjectStore {
   progress: AnalysisProgress | null;
   undoStack: Project[];
   redoStack: Project[];
+  /** User override for min_silence_ms; null = auto-tune. */
+  detectionMinSilenceMs: number | null;
+  /** Resolved value actually used by the last analysis (ms). */
+  lastResolvedMinSilenceMs: number | null;
 
   setProgress: (p: AnalysisProgress | null) => void;
+  setDetectionMinSilenceMs: (value: number | null) => void;
   ingestPath: (path: string) => Promise<void>;
   analyzeAudio: (path: string) => Promise<void>;
   openProject: (path: string) => Promise<void>;
@@ -121,8 +126,11 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     progress: null,
     undoStack: [],
     redoStack: [],
+    detectionMinSilenceMs: null,
+    lastResolvedMinSilenceMs: null,
 
     setProgress: (p) => set({ progress: p }),
+    setDetectionMinSilenceMs: (value) => set({ detectionMinSilenceMs: value }),
 
     ingestPath: async (path) => {
       const ext = extname(path);
@@ -135,7 +143,9 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
     analyzeAudio: async (path) => {
       set({ busy: true, progress: null });
       try {
-        const result = await analyzeRecording(path);
+        const result = await analyzeRecording(path, {
+          minSilenceMs: get().detectionMinSilenceMs,
+        });
 
         const detected: Clip[] = result.clips.map((c) => ({
           id: newUuid(),
@@ -171,6 +181,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           progress: null,
           undoStack: [],
           redoStack: [],
+          lastResolvedMinSilenceMs: result.minSilenceMs,
         });
 
         const editor = useEditorStore.getState();
@@ -205,6 +216,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
           progress: null,
           undoStack: [],
           redoStack: [],
+          lastResolvedMinSilenceMs: null,
         });
         const editor = useEditorStore.getState();
         editor.setActive(orderedClips(project.clips)[0]?.id ?? null);
@@ -231,6 +243,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
         progress: null,
         undoStack: [],
         redoStack: [],
+        lastResolvedMinSilenceMs: null,
       });
       const editor = useEditorStore.getState();
       editor.setActive(null);

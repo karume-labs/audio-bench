@@ -5,6 +5,7 @@ import {
   Divider,
   Group,
   List,
+  NumberInput,
   Paper,
   Progress,
   ScrollArea,
@@ -32,7 +33,6 @@ import { useProjectStore } from "../stores/useProjectStore";
 const PROFILE_ROWS: Array<[label: string, value: string]> = [
   ["Frame", "10 ms"],
   ["Margin", "20 dB"],
-  ["Min silence", "1500 ms"],
   ["Min clip", "300 ms"],
   ["Max clip", "10 s"],
   ["Noise floor", "10th pctl"],
@@ -58,6 +58,13 @@ export default function ProjectSidebar() {
   const saveProject = useProjectStore((s) => s.saveProject);
   const exportBlockers = useProjectStore((s) => s.exportBlockers);
   const executeExport = useProjectStore((s) => s.executeExport);
+  const detectionMinSilenceMs = useProjectStore((s) => s.detectionMinSilenceMs);
+  const lastResolvedMinSilenceMs = useProjectStore(
+    (s) => s.lastResolvedMinSilenceMs,
+  );
+  const setDetectionMinSilenceMs = useProjectStore(
+    (s) => s.setDetectionMinSilenceMs,
+  );
   const activeClipId = useEditorStore((s) => s.activeClipId);
   const [gate, setGate] = useState<string | null>(null);
 
@@ -303,7 +310,7 @@ export default function ProjectSidebar() {
             <SectionLabel>Processing profile</SectionLabel>
             <Tip
               label="Detection profile"
-              description="Settings the silence detector ran with: 10 ms frames, 20 dB margin over the noise floor, 1.5 s minimum silence, 300 ms minimum clip."
+              description="Settings the silence detector ran with: 10 ms frames, 20 dB margin over the noise floor, adjustable minimum silence, 300 ms minimum clip."
             >
               <Paper withBorder p="xs">
                 <Stack gap={2}>
@@ -317,6 +324,39 @@ export default function ProjectSidebar() {
                       </Text>
                     </Group>
                   ))}
+                  <Group justify="space-between" gap={4} align="center">
+                    <Text size="xs" c="dimmed">
+                      Min silence
+                    </Text>
+                    <Group gap={4} align="center" wrap="nowrap">
+                      <NumberInput
+                        size="xs"
+                        w={92}
+                        min={100}
+                        max={5000}
+                        step={100}
+                        suffix=" ms"
+                        value={detectionMinSilenceMs ?? undefined}
+                        placeholder="auto"
+                        onChange={(v) =>
+                          setDetectionMinSilenceMs(
+                            typeof v === "number" && Number.isFinite(v)
+                              ? v
+                              : null,
+                          )
+                        }
+                        allowDecimal={false}
+                        hideControls
+                      />
+                      {detectionMinSilenceMs === null && (
+                        <Text size="xs" ff="monospace" c="dimmed">
+                          {lastResolvedMinSilenceMs !== null
+                            ? `auto -> ${lastResolvedMinSilenceMs}`
+                            : "auto"}
+                        </Text>
+                      )}
+                    </Group>
+                  </Group>
                 </Stack>
               </Paper>
             </Tip>

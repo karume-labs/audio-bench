@@ -23,7 +23,7 @@ export interface DetectionSettings {
   frameMs: number;
   overlapMs: number;
   marginDb: number;
-  minSilenceMs: number;
+  minSilenceMs: number | null;
   minClipMs: number;
   maxClipMs: number;
   noiseFloorPctl: number;
@@ -34,7 +34,7 @@ export const DEFAULT_DETECTION: DetectionSettings = {
   frameMs: 10,
   overlapMs: 0,
   marginDb: 20,
-  minSilenceMs: 1500,
+  minSilenceMs: null,
   minClipMs: 300,
   maxClipMs: 10_000,
   noiseFloorPctl: 10,
@@ -60,6 +60,7 @@ export interface DetectedClip {
 export interface AnalysisResult {
   source: SourceInfo;
   clips: DetectedClip[];
+  minSilenceMs: number;
 }
 
 export interface Peaks {

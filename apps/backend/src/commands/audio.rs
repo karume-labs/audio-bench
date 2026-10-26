@@ -16,7 +16,9 @@ pub struct DetectionSettings {
     /// Threshold margin above the estimated noise floor, in dB.
     pub margin_db: f32,
     /// Minimum silence length (ms) that becomes a cut boundary.
-    pub min_silence_ms: f32,
+    /// `None` means "auto-tune from the recording".
+    #[serde(default)]
+    pub min_silence_ms: Option<f32>,
     /// Minimum clip length (ms) when deriving clips from speech regions.
     pub min_clip_ms: f32,
     /// Maximum clip length (ms); detection profile metadata.
@@ -33,7 +35,7 @@ impl Default for DetectionSettings {
             frame_ms: 10.0,
             overlap_ms: 0.0,
             margin_db: 20.0,
-            min_silence_ms: 1500.0,
+            min_silence_ms: None,
             min_clip_ms: 300.0,
             max_clip_ms: 10000.0,
             noise_floor_pctl: 10.0,
@@ -71,6 +73,8 @@ pub struct DetectedClip {
 pub struct AnalysisResult {
     pub source: SourceInfo,
     pub clips: Vec<DetectedClip>,
+    /// Resolved minimum-silence value actually used (ms).
+    pub min_silence_ms: f32,
 }
 
 /// Result of `generate_peaks`: min/max waveform buckets over `width` pixels.
