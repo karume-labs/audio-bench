@@ -6,6 +6,7 @@ import {
   saveProjectFile,
 } from "@/ipc/commands";
 import type { AnalysisProgress } from "@/ipc/events";
+import { withFlags } from "@/lib/analysis";
 import {
   AUDIO_EXTENSIONS,
   basename,
@@ -43,24 +44,6 @@ const deriveProjectPath = (originalPath: string): string =>
   `${originalPath.replace(/\.[^./\\]+$/, "")}.audiobench`;
 
 /** Recompute derived flags (edge_clamped based on the 5s export window). */
-const withFlags = (project: Project, clips: Clip[]): Clip[] => {
-  const durationSamples =
-    project.source.duration_samples ??
-    Math.round(project.source.duration_s * 48_000);
-  const padSamples = 5 * 48000;
-  return clips.map((c) => {
-    const flags: (typeof c.flags extends (infer T)[] | undefined
-      ? T
-      : never)[] = [];
-    if (
-      c.core_start_sample < padSamples ||
-      c.core_end_sample + padSamples > durationSamples
-    ) {
-      flags.push("edge_clamped");
-    }
-    return { ...c, flags };
-  });
-};
 
 interface ProjectStore {
   project: Project | null;
