@@ -72,6 +72,7 @@ interface ProjectStore {
   ingestPath: (path: string) => Promise<void>;
   analyzeAudio: (path: string) => Promise<void>;
   openProject: (path: string) => Promise<void>;
+  closeProject: () => void;
   saveProject: (announce?: boolean) => Promise<void>;
   exportBlockers: () => string | null;
   executeExport: (outDir: string) => Promise<void>;
@@ -215,6 +216,32 @@ export const useProjectStore = create<ProjectStore>((set, get) => {
       } catch (err) {
         notifyError("Could not open project", err);
       }
+    },
+
+    closeProject: () => {
+      const { busy, exporting, projectPath } = get();
+      if (busy || exporting) {
+        notifyInfo("Still busy", "Wait for analysis or export to finish.");
+        return;
+      }
+      set({
+        project: null,
+        projectPath: null,
+        busy: false,
+        progress: null,
+        undoStack: [],
+        redoStack: [],
+      });
+      const editor = useEditorStore.getState();
+      editor.setActive(null);
+      editor.setChecked([]);
+      editor.setPlayhead(0);
+      editor.setPlaying(false);
+      editor.setZoom(0);
+      notifyInfo(
+        "Project closed",
+        projectPath ? `Unloaded ${basename(projectPath)}` : "Workspace cleared",
+      );
     },
 
     saveProject: async (announce = false) => {

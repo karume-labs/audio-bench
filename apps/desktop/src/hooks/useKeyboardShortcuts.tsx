@@ -1,6 +1,11 @@
 import { orderedClips } from "@audio-bench/domain";
+import { Stack, Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { useEffect } from "react";
+import { basename } from "../lib/format";
+import { notifyInfo } from "../lib/notify";
 import { waveformBridge } from "../lib/waveformBridge";
+import { useDropZoneStore } from "../stores/useDropZoneStore";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
@@ -42,6 +47,46 @@ export const useKeyboardShortcuts = (): void => {
       const activeId = editor.activeClipId;
 
       switch (e.key) {
+        case "Escape": {
+          // A visible drop overlay owns Escape first: dismiss it and stop.
+          const dropZone = useDropZoneStore.getState();
+          if (dropZone.isDragging) {
+            e.preventDefault();
+            dropZone.dismiss();
+            return;
+          }
+          // A modal or drawer handles its own Escape (it closes first; its
+          // element is still mounted when this listener runs).
+          if (document.querySelector('[role="dialog"]')) return;
+          if (!project.project) return;
+          if (project.busy || project.exporting) {
+            notifyInfo("Still busy", "Wait for analysis or export to finish.");
+            return;
+          }
+          e.preventDefault();
+          const current = project.project;
+          const name = current.name ?? basename(current.source.original_path);
+          modals.openConfirmModal({
+            title: "Close project?",
+            children: (
+              <Stack gap="xs">
+                <Text size="sm">
+                  Close <b>{name}</b> and return to an empty workspace?
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Your edits are already autosaved to the project file on disk.
+                  Closing only clears the session and its undo history from
+                  memory.
+                </Text>
+              </Stack>
+            ),
+            labels: { confirm: "Close project", cancel: "Cancel" },
+            confirmProps: { color: "red" },
+            onConfirm: () => useProjectStore.getState().closeProject(),
+          });
+          return;
+        }
+
         case " ":
         case "Spacebar": {
           e.preventDefault();

@@ -11,11 +11,13 @@ import {
 } from "@mantine/core";
 import { useEffect, useMemo, useRef } from "react";
 import { formatTimecode, samplesToSeconds } from "../lib/format";
+import { FLAG_TIP, STATUS_TIP } from "../lib/statusTip";
 import { waveformBridge } from "../lib/waveformBridge";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
 import { CLIP_STATUS_COLOR } from "../theme";
+import Tip from "./Tip";
 
 const statusColor = (status: string): string =>
   CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
@@ -83,30 +85,33 @@ export default function ClipTable() {
     label: string,
     key: "index" | "status" | "duration",
     align?: "left" | "right",
+    description?: string,
   ) => (
-    <Table.Th
-      style={{
-        cursor: "pointer",
-        textAlign: align ?? "left",
-        userSelect: "none",
-      }}
-      onClick={() => setSort(key as "index" | "status" | "duration")}
-    >
-      <Group
-        gap={4}
-        justify={align === "right" ? "flex-end" : "flex-start"}
-        wrap="nowrap"
+    <Tip label={`Sort by ${label}`} description={description}>
+      <Table.Th
+        style={{
+          cursor: "pointer",
+          textAlign: align ?? "left",
+          userSelect: "none",
+        }}
+        onClick={() => setSort(key as "index" | "status" | "duration")}
       >
-        <Text size="xs" fw={600} c="dimmed">
-          {label}
-        </Text>
-        {sort.by === key && (
-          <Text size="xs" c="dimmed">
-            {sort.dir === "asc" ? "↑" : "↓"}
+        <Group
+          gap={4}
+          justify={align === "right" ? "flex-end" : "flex-start"}
+          wrap="nowrap"
+        >
+          <Text size="xs" fw={600} c="dimmed">
+            {label}
           </Text>
-        )}
-      </Group>
-    </Table.Th>
+          {sort.by === key && (
+            <Text size="xs" c="dimmed">
+              {sort.dir === "asc" ? "↑" : "↓"}
+            </Text>
+          )}
+        </Group>
+      </Table.Th>
+    </Tip>
   );
 
   const allChecked = clips.length > 0 && checked.length === clips.length;
@@ -118,23 +123,33 @@ export default function ClipTable() {
           Clips ({clips.length})
         </Text>
         <Group gap="xs">
-          <Button
-            size="xs"
-            variant="light"
-            disabled={checked.length === 0}
-            onClick={() => approveChecked()}
+          <Tip
+            label="Approve selected"
+            description="Mark every ticked clip as approved in one action."
           >
-            Approve selected ({checked.length})
-          </Button>
-          <Checkbox
-            size="xs"
-            label="All"
-            checked={allChecked}
-            indeterminate={checked.length > 0 && !allChecked}
-            onChange={() =>
-              setChecked(allChecked ? [] : clips.map((c) => c.id))
-            }
-          />
+            <Button
+              size="xs"
+              variant="light"
+              disabled={checked.length === 0}
+              onClick={() => approveChecked()}
+            >
+              Approve selected ({checked.length})
+            </Button>
+          </Tip>
+          <Tip
+            label="Select all"
+            description="Tick or untick every clip in the table."
+          >
+            <Checkbox
+              size="xs"
+              label="All"
+              checked={allChecked}
+              indeterminate={checked.length > 0 && !allChecked}
+              onChange={() =>
+                setChecked(allChecked ? [] : clips.map((c) => c.id))
+              }
+            />
+          </Tip>
         </Group>
       </Group>
 
@@ -144,11 +159,26 @@ export default function ClipTable() {
             <Table.Tr>
               <Table.Th style={{ width: 34 }} />
               <Table.Th style={{ width: 40 }}>#</Table.Th>
-              {headerCell("Status", "status")}
-              {headerCell("Start", "index", "right")}
+              {headerCell(
+                "Status",
+                "status",
+                "left",
+                "Sort proposed → approved → rejected.",
+              )}
+              {headerCell(
+                "Start",
+                "index",
+                "right",
+                "Sort by clip start time.",
+              )}
               <Table.Th style={{ textAlign: "right" }}>End</Table.Th>
-              {headerCell("Dur", "duration", "right")}
-              <Table.Th style={{ width: 90 }}>Flags</Table.Th>
+              {headerCell("Dur", "duration", "right", "Sort by clip length.")}
+              <Tip
+                label="Flags"
+                description="EDGE: the 5s export pad runs into the recording edge. DUR: duration outlier."
+              >
+                <Table.Th style={{ width: 90 }}>Flags</Table.Th>
+              </Tip>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -176,11 +206,16 @@ export default function ClipTable() {
                   }}
                 >
                   <Table.Td onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      size="xs"
-                      checked={checked.includes(clip.id)}
-                      onChange={() => toggleChecked(clip.id)}
-                    />
+                    <Tip
+                      label="Select clip"
+                      description="Tick to include it in a bulk status change."
+                    >
+                      <Checkbox
+                        size="xs"
+                        checked={checked.includes(clip.id)}
+                        onChange={() => toggleChecked(clip.id)}
+                      />
+                    </Tip>
                   </Table.Td>
                   <Table.Td>
                     <Text size="xs" c="dimmed">
@@ -188,13 +223,18 @@ export default function ClipTable() {
                     </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge
-                      size="xs"
-                      color={statusColor(clip.status)}
-                      variant="light"
+                    <Tip
+                      label={`Status: ${clip.status}`}
+                      description={STATUS_TIP[clip.status]}
                     >
-                      {clip.status}
-                    </Badge>
+                      <Badge
+                        size="xs"
+                        color={statusColor(clip.status)}
+                        variant="light"
+                      >
+                        {clip.status}
+                      </Badge>
+                    </Tip>
                   </Table.Td>
                   <Table.Td>
                     <Text size="xs" ff="monospace">
@@ -218,14 +258,23 @@ export default function ClipTable() {
                   <Table.Td>
                     <Group gap={2}>
                       {flags.map((f) => (
-                        <Badge
+                        <Tip
                           key={f}
-                          size="xs"
-                          color={f === "duration_outlier" ? "red" : "yellow"}
-                          variant="light"
+                          label={
+                            f === "duration_outlier"
+                              ? "Duration outlier"
+                              : "Edge clamped"
+                          }
+                          description={FLAG_TIP[f]}
                         >
-                          {f === "duration_outlier" ? "DUR" : "EDGE"}
-                        </Badge>
+                          <Badge
+                            size="xs"
+                            color={f === "duration_outlier" ? "red" : "yellow"}
+                            variant="light"
+                          >
+                            {f === "duration_outlier" ? "DUR" : "EDGE"}
+                          </Badge>
+                        </Tip>
                       ))}
                     </Group>
                   </Table.Td>

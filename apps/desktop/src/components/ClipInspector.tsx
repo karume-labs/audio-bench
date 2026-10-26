@@ -16,7 +16,9 @@ import { formatTimecode, samplesToSeconds } from "../lib/format";
 import { useEditorStore } from "../stores/useEditorStore";
 import { useProjectStore } from "../stores/useProjectStore";
 
+import { STATUS_TIP } from "../lib/statusTip";
 import { CLIP_STATUS_COLOR } from "../theme";
+import Tip from "./Tip";
 
 const statusColor = (status: string): string =>
   CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
@@ -84,9 +86,14 @@ export default function ClipInspector() {
               #{project.clips.findIndex((c) => c.id === clip.id) + 1}
             </Title>
           </div>
-          <Badge color={statusColor(clip.status)} size="lg" variant="light">
-            {clip.status}
-          </Badge>
+          <Tip
+            label={`Status: ${clip.status}`}
+            description={STATUS_TIP[clip.status]}
+          >
+            <Badge color={statusColor(clip.status)} size="lg" variant="light">
+              {clip.status}
+            </Badge>
+          </Tip>
         </Group>
 
         {flags.includes("edge_clamped") && (
@@ -128,52 +135,77 @@ export default function ClipInspector() {
 
         <Divider />
         <Group gap="xs">
-          <Button
-            size="xs"
-            color="green"
-            onClick={() => setClipStatus(clip.id, "approved")}
-            disabled={clip.status === "approved"}
+          <Tip
+            label="Approve"
+            description="Mark this clip as reviewed and ready to export."
           >
-            Approve (A)
-          </Button>
-          <Button
-            size="xs"
-            color="red"
-            variant="light"
-            onClick={() => setClipStatus(clip.id, "rejected")}
-            disabled={clip.status === "rejected"}
-          >
-            Reject (R)
-          </Button>
-          {clip.status === "rejected" && (
             <Button
               size="xs"
-              variant="outline"
-              onClick={() => setClipStatus(clip.id, "proposed")}
+              color="green"
+              onClick={() => setClipStatus(clip.id, "approved")}
+              disabled={clip.status === "approved"}
             >
-              Restore
+              Approve (A)
             </Button>
+          </Tip>
+          <Tip
+            label="Reject"
+            description="Exclude this clip from the export. It stays in the table and can be restored."
+          >
+            <Button
+              size="xs"
+              color="red"
+              variant="light"
+              onClick={() => setClipStatus(clip.id, "rejected")}
+              disabled={clip.status === "rejected"}
+            >
+              Reject (R)
+            </Button>
+          </Tip>
+          {clip.status === "rejected" && (
+            <Tip
+              label="Restore"
+              description="Return a rejected clip to proposed so it is exported again."
+            >
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => setClipStatus(clip.id, "proposed")}
+              >
+                Restore
+              </Button>
+            </Tip>
           )}
         </Group>
         <Group gap="xs">
-          <Button
-            size="xs"
-            variant="light"
-            onClick={() => mergeActiveWithNext(clip.id)}
+          <Tip
+            label="Merge with next"
+            description="Join this clip with the one after it — useful when a pause was cut in the middle of a line."
           >
-            Merge next (M)
-          </Button>
-          <Button
-            size="xs"
-            variant="light"
-            onClick={() =>
-              splitClipAt(
-                Math.round(useEditorStore.getState().playhead * 48_000),
-              )
-            }
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => mergeActiveWithNext(clip.id)}
+            >
+              Merge next (M)
+            </Button>
+          </Tip>
+          <Tip
+            label="Split at playhead"
+            description="Cut this clip at the playhead position. Click the waveform to place the playhead first."
           >
-            Split @ playhead (S)
-          </Button>
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() =>
+                splitClipAt(
+                  Math.round(useEditorStore.getState().playhead * 48_000),
+                )
+              }
+            >
+              Split @ playhead (S)
+            </Button>
+          </Tip>
         </Group>
 
         <Divider />

@@ -22,6 +22,7 @@ import {
   IconRocket,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
+import Tip from "../components/Tip";
 import { pickAudioFile, pickDirectory, pickProjectFile } from "../ipc/commands";
 import { basename, formatDuration } from "../lib/format";
 import { notifyError } from "../lib/notify";
@@ -154,34 +155,49 @@ export default function ProjectSidebar() {
         <Divider />
 
         <SectionLabel>Inputs</SectionLabel>
-        <Button
-          leftSection={<IconFileMusic size={16} />}
-          onClick={() => void onPickAudio()}
-          loading={busy}
-          disabled={busy || exporting}
-          fullWidth
+        <Tip
+          label="Import recording"
+          description="Pick a WAV, FLAC, MP3 or M4A file. It is conformed to 24-bit / 48 kHz mono, then split into clips."
         >
-          Import recording
-        </Button>
-        <Group grow>
           <Button
-            leftSection={<IconFolderOpen size={16} />}
-            variant="light"
-            size="xs"
-            onClick={() => void onOpenProject()}
+            leftSection={<IconFileMusic size={16} />}
+            onClick={() => void onPickAudio()}
+            loading={busy}
             disabled={busy || exporting}
+            fullWidth
           >
-            Open
+            Import recording
           </Button>
-          <Button
-            leftSection={<IconDeviceFloppy size={16} />}
-            variant="light"
-            size="xs"
-            onClick={() => void onSave()}
-            disabled={!project || busy || exporting}
+        </Tip>
+        <Group grow>
+          <Tip
+            label="Open project"
+            description="Load a saved .audiobench file, including every clip's status and flags."
           >
-            Save
-          </Button>
+            <Button
+              leftSection={<IconFolderOpen size={16} />}
+              variant="light"
+              size="xs"
+              onClick={() => void onOpenProject()}
+              disabled={busy || exporting}
+            >
+              Open
+            </Button>
+          </Tip>
+          <Tip
+            label="Save project"
+            description="Write the project file now — the app also autosaves after every edit."
+          >
+            <Button
+              leftSection={<IconDeviceFloppy size={16} />}
+              variant="light"
+              size="xs"
+              onClick={() => void onSave()}
+              disabled={!project || busy || exporting}
+            >
+              Save
+            </Button>
+          </Tip>
         </Group>
 
         {busy && (
@@ -215,14 +231,19 @@ export default function ProjectSidebar() {
                   {formatDuration(project.source.duration_s)}
                 </Text>
               </Group>
-              <Group justify="space-between">
-                <Text size="xs" c="dimmed">
-                  Master
-                </Text>
-                <Text size="xs" ff="monospace">
-                  24-bit / 48 kHz mono
-                </Text>
-              </Group>
+              <Tip
+                label="Conformed master"
+                description="The source is rewritten as 24-bit / 48 kHz mono WAV beside the original; the waveform and every export read this file."
+              >
+                <Group justify="space-between">
+                  <Text size="xs" c="dimmed">
+                    Master
+                  </Text>
+                  <Text size="xs" ff="monospace">
+                    24-bit / 48 kHz mono
+                  </Text>
+                </Group>
+              </Tip>
               <Group justify="space-between">
                 <Text size="xs" c="dimmed">
                   Clips
@@ -256,16 +277,21 @@ export default function ProjectSidebar() {
               </Alert>
             )}
 
-            <Button
-              leftSection={<IconPlayerPlay size={16} />}
-              color="green"
-              onClick={onExport}
-              loading={exporting}
-              disabled={busy || exporting}
-              fullWidth
+            <Tip
+              label="Export clips"
+              description="Choose a folder, then write every non-rejected clip plus manifest.csv and alignment_report.csv."
             >
-              Export clips
-            </Button>
+              <Button
+                leftSection={<IconPlayerPlay size={16} />}
+                color="green"
+                onClick={onExport}
+                loading={exporting}
+                disabled={busy || exporting}
+                fullWidth
+              >
+                Export clips
+              </Button>
+            </Tip>
 
             {gate && (
               <Alert color="red" title="Export blocked">
@@ -275,34 +301,44 @@ export default function ProjectSidebar() {
 
             <Divider />
             <SectionLabel>Processing profile</SectionLabel>
-            <Paper withBorder p="xs">
-              <Stack gap={2}>
-                {PROFILE_ROWS.map(([label, value]) => (
-                  <Group key={label} justify="space-between" gap={4}>
-                    <Text size="xs" c="dimmed">
-                      {label}
-                    </Text>
-                    <Text size="xs" ff="monospace">
-                      {value}
-                    </Text>
-                  </Group>
-                ))}
-              </Stack>
-            </Paper>
+            <Tip
+              label="Detection profile"
+              description="Settings the silence detector ran with: 10 ms frames, 20 dB margin over the noise floor, 1.5 s minimum silence, 300 ms minimum clip."
+            >
+              <Paper withBorder p="xs">
+                <Stack gap={2}>
+                  {PROFILE_ROWS.map(([label, value]) => (
+                    <Group key={label} justify="space-between" gap={4}>
+                      <Text size="xs" c="dimmed">
+                        {label}
+                      </Text>
+                      <Text size="xs" ff="monospace">
+                        {value}
+                      </Text>
+                    </Group>
+                  ))}
+                </Stack>
+              </Paper>
+            </Tip>
             <Text size="xs" c="dimmed">
               Detection runs on the conformed master.
             </Text>
 
             <Divider />
             <SectionLabel>Project file</SectionLabel>
-            <Group gap="xs">
-              <ThemeIcon size="sm" variant="light" color="gray">
-                <IconDeviceFloppy size={14} />
-              </ThemeIcon>
-              <Text size="xs" ff="monospace" lineClamp={2}>
-                {projectPath ?? "—"}
-              </Text>
-            </Group>
+            <Tip
+              label="Project file"
+              description="Autosaved after every edit. Reopen it with Open, or by dropping the file anywhere on the window."
+            >
+              <Group gap="xs">
+                <ThemeIcon size="sm" variant="light" color="gray">
+                  <IconDeviceFloppy size={14} />
+                </ThemeIcon>
+                <Text size="xs" ff="monospace" lineClamp={2}>
+                  {projectPath ?? "—"}
+                </Text>
+              </Group>
+            </Tip>
             <Text size="xs" c="dimmed">
               Autosaves after every edit.
             </Text>

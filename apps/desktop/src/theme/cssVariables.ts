@@ -16,6 +16,7 @@ export const cssVariablesResolver = (_theme: MantineTheme) => ({
     "--ab-export-window": "rgba(45, 150, 140, 0.16)",
     "--ab-cut-line": amber[6],
     "--ab-playhead": rose[6],
+    "--ab-dropzone-scrim": "rgba(26, 26, 29, 0.40)",
   },
   dark: {
     "--mantine-color-body": dark[7],
@@ -25,5 +26,6 @@ export const cssVariablesResolver = (_theme: MantineTheme) => ({
     "--ab-export-window": "rgba(79, 209, 197, 0.16)",
     "--ab-cut-line": amber[4],
     "--ab-playhead": rose[5],
+    "--ab-dropzone-scrim": "rgba(8, 8, 10, 0.66)",
   },
 });

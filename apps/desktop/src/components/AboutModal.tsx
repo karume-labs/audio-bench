@@ -14,6 +14,7 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import Tip from "./Tip";
 
 const LINKS = [
   {
@@ -59,11 +60,11 @@ export default function AboutModal({ opened, onClose }: AboutModalProps) {
       <Stack gap="md">
         <Group gap="md" align="center">
           <img
-            src="/logo.jpg"
+            src="/logo.png"
             alt="Audio Bench logo"
             width={64}
-            height={64}
-            style={{ borderRadius: 12, display: "block" }}
+            height={43}
+            style={{ display: "block" }}
           />
           <div>
             <Title order={3}>Audio Bench</Title>
@@ -122,19 +123,24 @@ export default function AboutModal({ opened, onClose }: AboutModalProps) {
           </Text>
           <Stack gap={4}>
             {LINKS.map((link) => (
-              <Button
+              <Tip
                 key={link.url}
-                variant="subtle"
-                size="sm"
-                leftSection={<link.icon size={16} />}
-                justify="flex-start"
-                onClick={() => void openUrl(link.url)}
+                label={`Open ${link.label}`}
+                description={`Opens ${link.url} in your browser`}
               >
-                {link.label}{" "}
-                <Text span size="xs" c="dimmed" ml={6}>
-                  {link.handle}
-                </Text>
-              </Button>
+                <Button
+                  variant="subtle"
+                  size="sm"
+                  leftSection={<link.icon size={16} />}
+                  justify="flex-start"
+                  onClick={() => void openUrl(link.url)}
+                >
+                  {link.label}{" "}
+                  <Text span size="xs" c="dimmed" ml={6}>
+                    {link.handle}
+                  </Text>
+                </Button>
+              </Tip>
             ))}
           </Stack>
         </div>
