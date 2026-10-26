@@ -4,7 +4,7 @@ import {
   dropAnnouncement,
   dropCopy,
   isIngestible,
-} from "./dropKind";
+} from "@/lib/dropKind";
 
 describe("classifyDropPaths", () => {
   test("empty drop", () => {

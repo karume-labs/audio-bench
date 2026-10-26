@@ -1,13 +1,13 @@
+import { basename } from "@/lib/format";
+import { notifyInfo } from "@/lib/notify";
+import { waveformBridge } from "@/lib/waveformBridge";
+import { useDropZoneStore } from "@/stores/useDropZoneStore";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { orderedClips } from "@audio-bench/domain";
 import { Stack, Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useEffect } from "react";
-import { basename } from "../lib/format";
-import { notifyInfo } from "../lib/notify";
-import { waveformBridge } from "../lib/waveformBridge";
-import { useDropZoneStore } from "../stores/useDropZoneStore";
-import { useEditorStore } from "../stores/useEditorStore";
-import { useProjectStore } from "../stores/useProjectStore";
 
 const isTypingTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) return false;

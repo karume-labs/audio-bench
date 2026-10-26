@@ -1,3 +1,12 @@
+import { pickAudioFile, pickProjectFile } from "@/ipc/commands";
+import { ACCEPTED_AUDIO } from "@/lib/dropKind";
+import { notifyError } from "@/lib/notify";
+import {
+  type RecentProject,
+  loadRecentProjects,
+  removeRecentProject,
+} from "@/lib/recentProjects";
+import { useProjectStore } from "@/stores/useProjectStore";
 import {
   Button,
   Group,
@@ -8,19 +17,8 @@ import {
 } from "@mantine/core";
 import { IconFileMusic, IconFolderOpen } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { pickAudioFile, pickProjectFile } from "../ipc/commands";
-import { ACCEPTED_AUDIO } from "../lib/dropKind";
-import { notifyError } from "../lib/notify";
-import {
-  type RecentProject,
-  loadRecentProjects,
-  removeRecentProject,
-} from "../lib/recentProjects";
-import { useProjectStore } from "../stores/useProjectStore";
 
-export default function StartScreen({
-  headerHeight,
-}: { headerHeight: number }) {
+export const StartScreen = ({ headerHeight }: { headerHeight: number }) => {
   const ingestPath = useProjectStore((s) => s.ingestPath);
   const openProject = useProjectStore((s) => s.openProject);
   const [recent, setRecent] = useState<RecentProject[]>([]);
@@ -148,4 +146,4 @@ export default function StartScreen({
       </Stack>
     </div>
   );
-}
+};

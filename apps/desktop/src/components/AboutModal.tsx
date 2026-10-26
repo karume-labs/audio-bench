@@ -1,3 +1,4 @@
+import { Tip } from "@/components/Tip";
 import {
   Button,
   Divider,
@@ -14,7 +15,6 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import Tip from "./Tip";
 
 const LINKS = [
   {
@@ -48,7 +48,7 @@ export interface AboutModalProps {
   onClose: () => void;
 }
 
-export default function AboutModal({ opened, onClose }: AboutModalProps) {
+export const AboutModal = ({ opened, onClose }: AboutModalProps) => {
   return (
     <Modal
       opened={opened}
@@ -147,4 +147,4 @@ export default function AboutModal({ opened, onClose }: AboutModalProps) {
       </Stack>
     </Modal>
   );
-}
+};

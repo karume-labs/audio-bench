@@ -1,9 +1,9 @@
+import { dropAnnouncement, dropCopy } from "@/lib/dropKind";
+import { useDropZoneStore } from "@/stores/useDropZoneStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { Group, Kbd, Text, Title, VisuallyHidden } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { IconUpload } from "@tabler/icons-react";
-import { dropAnnouncement, dropCopy } from "../lib/dropKind";
-import { useDropZoneStore } from "../stores/useDropZoneStore";
-import { useProjectStore } from "../stores/useProjectStore";
 
 /**
  * Window-level drop overlay.
@@ -18,7 +18,7 @@ import { useProjectStore } from "../stores/useProjectStore";
  * fades via opacity so both show and hide animate, and the fade is dropped
  * entirely under `prefers-reduced-motion`.
  */
-export default function DropzoneOverlay() {
+export const DropzoneOverlay = () => {
   const isDragging = useDropZoneStore((s) => s.isDragging);
   const dropKind = useDropZoneStore((s) => s.dropKind);
   const hasProject = useProjectStore((s) => s.project !== null);
@@ -117,4 +117,4 @@ export default function DropzoneOverlay() {
       </div>
     </>
   );
-}
+};

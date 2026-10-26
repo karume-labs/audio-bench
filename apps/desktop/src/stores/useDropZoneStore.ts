@@ -1,5 +1,5 @@
+import type { DropKind } from "@/lib/dropKind";
 import { create } from "zustand";
-import type { DropKind } from "../lib/dropKind";
 
 /**
  * Shared state for the window-level drop overlay. Lives in a store (rather

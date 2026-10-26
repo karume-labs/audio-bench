@@ -1,5 +1,5 @@
+import { amber, dark, rose, teal } from "@/theme/colors";
 import type { MantineTheme } from "@mantine/core";
-import { amber, dark, rose, teal } from "./colors";
 
 export const cssVariablesResolver = (_theme: MantineTheme) => ({
   variables: {

@@ -1,3 +1,9 @@
+import { Tip } from "@/components/Tip";
+import { pickAudioFile, pickDirectory, pickProjectFile } from "@/ipc/commands";
+import { basename, formatDuration } from "@/lib/format";
+import { notifyError } from "@/lib/notify";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { orderedClips } from "@audio-bench/domain";
 import {
   Alert,
@@ -24,12 +30,6 @@ import {
   IconRocket,
 } from "@tabler/icons-react";
 import { useCallback, useState } from "react";
-import Tip from "../components/Tip";
-import { pickAudioFile, pickDirectory, pickProjectFile } from "../ipc/commands";
-import { basename, formatDuration } from "../lib/format";
-import { notifyError } from "../lib/notify";
-import { useEditorStore } from "../stores/useEditorStore";
-import { useProjectStore } from "../stores/useProjectStore";
 
 const PROFILE_ROWS: Array<[label: string, value: string]> = [
   ["Frame", "10 ms"],
@@ -48,7 +48,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function ProjectSidebar() {
+export const ProjectSidebar = () => {
   const project = useProjectStore((s) => s.project);
   const busy = useProjectStore((s) => s.busy);
   const exporting = useProjectStore((s) => s.exporting);
@@ -484,4 +484,4 @@ export default function ProjectSidebar() {
       </Stack>
     </ScrollArea>
   );
-}
+};

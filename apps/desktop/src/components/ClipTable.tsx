@@ -1,3 +1,8 @@
+import { formatTimecode, samplesToSeconds } from "@/lib/format";
+import { FLAG_TIP, STATUS_TIP } from "@/lib/statusTip";
+import { waveformBridge } from "@/lib/waveformBridge";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { type Clip, orderedClips } from "@audio-bench/domain";
 import {
   Badge,
@@ -10,19 +15,14 @@ import {
   Text,
 } from "@mantine/core";
 import { useEffect, useMemo, useRef } from "react";
-import { formatTimecode, samplesToSeconds } from "../lib/format";
-import { FLAG_TIP, STATUS_TIP } from "../lib/statusTip";
-import { waveformBridge } from "../lib/waveformBridge";
-import { useEditorStore } from "../stores/useEditorStore";
-import { useProjectStore } from "../stores/useProjectStore";
 
-import { CLIP_STATUS_COLOR } from "../theme";
-import Tip from "./Tip";
+import { Tip } from "@/components/Tip";
+import { CLIP_STATUS_COLOR } from "@/theme";
 
 const statusColor = (status: string): string =>
   CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
 
-export default function ClipTable() {
+export const ClipTable = () => {
   const project = useProjectStore((s) => s.project);
   const setActive = useEditorStore((s) => s.setActive);
   const activeClipId = useEditorStore((s) => s.activeClipId);
@@ -286,4 +286,4 @@ export default function ClipTable() {
       </ScrollArea>
     </Stack>
   );
-}
+};

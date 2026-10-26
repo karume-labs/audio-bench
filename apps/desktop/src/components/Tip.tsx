@@ -18,12 +18,12 @@ export interface TipProps {
  * those children are wrapped in a span - otherwise the tooltip could never
  * explain why a button is greyed out.
  */
-export default function Tip({
+export const Tip = ({
   label,
   description,
   children,
   position = "bottom",
-}: TipProps) {
+}: TipProps) => {
   const body = description ? (
     <span style={{ display: "block", maxWidth: 260 }}>
       <span style={{ display: "block", fontWeight: 600 }}>{label}</span>
@@ -56,4 +56,4 @@ export default function Tip({
       )}
     </Tooltip>
   );
-}
+};

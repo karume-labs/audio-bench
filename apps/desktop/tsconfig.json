@@ -12,6 +12,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@domain/*": ["../../packages/domain/src/*"],
+      "@tools/*": ["../../tools/*"]
+    },
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true

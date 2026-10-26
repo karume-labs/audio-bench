@@ -1,3 +1,9 @@
+import { generatePeaks } from "@/ipc/commands";
+import { SAMPLE_RATE, samplesToSeconds } from "@/lib/format";
+import { waveformBridge } from "@/lib/waveformBridge";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { getWaveformColors } from "@/theme";
 import { Alert, Center, Group, Loader, Stack, Text } from "@mantine/core";
 import { useMantineColorScheme } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
@@ -6,16 +12,10 @@ import { memo, useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.js";
 import type { Region } from "wavesurfer.js/dist/plugins/regions.js";
-import { generatePeaks } from "../ipc/commands";
-import { SAMPLE_RATE, samplesToSeconds } from "../lib/format";
-import { waveformBridge } from "../lib/waveformBridge";
-import { useEditorStore } from "../stores/useEditorStore";
-import { useProjectStore } from "../stores/useProjectStore";
-import { getWaveformColors } from "../theme";
 
 const EXPORT_REGION_ID = "__export_window__";
 
-function WaveformWorkspace() {
+function WaveformWorkspaceComponent() {
   const containerRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
@@ -340,4 +340,4 @@ function WaveformWorkspace() {
   );
 }
 
-export default memo(WaveformWorkspace);
+export const WaveformWorkspace = memo(WaveformWorkspaceComponent);

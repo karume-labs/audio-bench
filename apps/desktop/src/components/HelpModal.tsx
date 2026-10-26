@@ -78,7 +78,7 @@ export interface HelpModalProps {
   onClose: () => void;
 }
 
-export default function HelpModal({ opened, onClose }: HelpModalProps) {
+export const HelpModal = ({ opened, onClose }: HelpModalProps) => {
   return (
     <Modal
       opened={opened}
@@ -157,4 +157,4 @@ export default function HelpModal({ opened, onClose }: HelpModalProps) {
       </Stack>
     </Modal>
   );
-}
+};

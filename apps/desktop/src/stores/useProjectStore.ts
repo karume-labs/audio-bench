@@ -1,4 +1,23 @@
 import {
+  analyzeRecording,
+  deleteProjectFile,
+  exportClips,
+  loadProjectFile,
+  saveProjectFile,
+} from "@/ipc/commands";
+import type { AnalysisProgress } from "@/ipc/events";
+import {
+  AUDIO_EXTENSIONS,
+  basename,
+  extname,
+  formatDuration,
+} from "@/lib/format";
+import { notifyError, notifyInfo, notifySuccess } from "@/lib/notify";
+import { notifyOsIfUnfocused } from "@/lib/osNotify";
+import { removeRecentProject } from "@/lib/recentProjects";
+import { recordRecentProject } from "@/lib/recentProjects";
+import { useEditorStore } from "@/stores/useEditorStore";
+import {
   type Clip,
   type ClipStatus,
   MANIFEST_COLUMNS,
@@ -17,25 +36,6 @@ import {
   toCsv,
 } from "@audio-bench/domain";
 import { create } from "zustand";
-import {
-  analyzeRecording,
-  deleteProjectFile,
-  exportClips,
-  loadProjectFile,
-  saveProjectFile,
-} from "../ipc/commands";
-import type { AnalysisProgress } from "../ipc/events";
-import {
-  AUDIO_EXTENSIONS,
-  basename,
-  extname,
-  formatDuration,
-} from "../lib/format";
-import { notifyError, notifyInfo, notifySuccess } from "../lib/notify";
-import { notifyOsIfUnfocused } from "../lib/osNotify";
-import { removeRecentProject } from "../lib/recentProjects";
-import { recordRecentProject } from "../lib/recentProjects";
-import { useEditorStore } from "./useEditorStore";
 
 const newUuid = (): string => globalThis.crypto.randomUUID();
 

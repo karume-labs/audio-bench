@@ -1,3 +1,6 @@
+import { formatTimecode, samplesToSeconds } from "@/lib/format";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import { createExportWindow } from "@audio-bench/domain";
 import {
   Alert,
@@ -12,13 +15,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { formatTimecode, samplesToSeconds } from "../lib/format";
-import { useEditorStore } from "../stores/useEditorStore";
-import { useProjectStore } from "../stores/useProjectStore";
 
-import { STATUS_TIP } from "../lib/statusTip";
-import { CLIP_STATUS_COLOR } from "../theme";
-import Tip from "./Tip";
+import { Tip } from "@/components/Tip";
+import { STATUS_TIP } from "@/lib/statusTip";
+import { CLIP_STATUS_COLOR } from "@/theme";
 
 const statusColor = (status: string): string =>
   CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
@@ -40,7 +40,7 @@ function Field({
   );
 }
 
-export default function ClipInspector() {
+export const ClipInspector = () => {
   const project = useProjectStore((s) => s.project);
   const setClipStatus = useProjectStore((s) => s.setClipStatus);
   const mergeActiveWithNext = useProjectStore((s) => s.mergeActiveWithNext);
@@ -242,4 +242,4 @@ export default function ClipInspector() {
       </Stack>
     </ScrollArea>
   );
-}
+};

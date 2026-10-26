@@ -1,3 +1,23 @@
+import { AboutModal } from "@/components/AboutModal";
+import { ClipInspector } from "@/components/ClipInspector";
+import { ClipTable } from "@/components/ClipTable";
+import { DropzoneOverlay } from "@/components/DropzoneOverlay";
+import { HelpModal } from "@/components/HelpModal";
+import { ProjectSidebar } from "@/components/ProjectSidebar";
+import { StartScreen } from "@/components/StartScreen";
+import { Tip } from "@/components/Tip";
+import { WaveformWorkspace } from "@/components/WaveformWorkspace";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { isTauri, pickAudioFile, pickProjectFile } from "@/ipc/commands";
+import { onAnalysisProgress } from "@/ipc/events";
+import { classifyDropPaths, isIngestible } from "@/lib/dropKind";
+import { basename, extname, formatTimecode } from "@/lib/format";
+import { notifyError, notifyInfo } from "@/lib/notify";
+import { ensureNotificationPermission } from "@/lib/osNotify";
+import { loadRecentProjects } from "@/lib/recentProjects";
+import { useDropZoneStore } from "@/stores/useDropZoneStore";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { useProjectStore } from "@/stores/useProjectStore";
 import {
   ActionIcon,
   AppShell,
@@ -34,28 +54,8 @@ import {
 } from "@tabler/icons-react";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useEffect, useMemo, useRef, useState } from "react";
-import AboutModal from "./components/AboutModal";
-import ClipInspector from "./components/ClipInspector";
-import ClipTable from "./components/ClipTable";
-import DropzoneOverlay from "./components/DropzoneOverlay";
-import HelpModal from "./components/HelpModal";
-import ProjectSidebar from "./components/ProjectSidebar";
-import StartScreen from "./components/StartScreen";
-import Tip from "./components/Tip";
-import WaveformWorkspace from "./components/WaveformWorkspace";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import { isTauri, pickAudioFile, pickProjectFile } from "./ipc/commands";
-import { onAnalysisProgress } from "./ipc/events";
-import { classifyDropPaths, isIngestible } from "./lib/dropKind";
-import { basename, extname, formatTimecode } from "./lib/format";
-import { notifyError, notifyInfo } from "./lib/notify";
-import { ensureNotificationPermission } from "./lib/osNotify";
-import { loadRecentProjects } from "./lib/recentProjects";
-import { useDropZoneStore } from "./stores/useDropZoneStore";
-import { useEditorStore } from "./stores/useEditorStore";
-import { useProjectStore } from "./stores/useProjectStore";
 
-export default function App() {
+export const App = () => {
   useKeyboardShortcuts();
 
   const [splashVisible, setSplashVisible] = useState(true);
@@ -100,7 +100,7 @@ export default function App() {
       group?: string;
       keywords?: string | string[];
       leftSection?: React.ReactNode;
-      onTrigger: () => void;
+      onClick: () => void;
     }[] = [];
 
     actions.push({
@@ -110,7 +110,7 @@ export default function App() {
       group: "Actions",
       keywords: ["audio", "file", "open"],
       leftSection: <IconFileMusic size={16} />,
-      onTrigger: async () => {
+      onClick: async () => {
         try {
           const path = await pickAudioFile();
           if (path) await ingestPath(path);
@@ -127,7 +127,7 @@ export default function App() {
       group: "Actions",
       keywords: ["load", "session"],
       leftSection: <IconFolderOpen size={16} />,
-      onTrigger: async () => {
+      onClick: async () => {
         try {
           const path = await pickProjectFile();
           if (path) await openProject(path);
@@ -143,7 +143,7 @@ export default function App() {
         label: "Re-analyze recording",
         description: "Re-run silence detection with current settings",
         group: "Project",
-        onTrigger: () => {
+        onClick: () => {
           modals.openConfirmModal({
             title: "Re-run detection?",
             children: (
@@ -164,7 +164,7 @@ export default function App() {
         label: "Rename project",
         description: "Change the project display name",
         group: "Project",
-        onTrigger: () => {
+        onClick: () => {
           renameValueRef.current = project?.name ?? "";
           modals.open({
             title: "Rename project",
@@ -199,7 +199,7 @@ export default function App() {
         description: "Remove the project file and conformed audio from disk",
         group: "Project",
         leftSection: <IconTrash size={16} />,
-        onTrigger: () => {
+        onClick: () => {
           modals.openConfirmModal({
             title: "Delete project?",
             children: (
@@ -220,7 +220,7 @@ export default function App() {
         label: "Close project",
         description: "Close the current session",
         group: "Project",
-        onTrigger: () => closeProject(),
+        onClick: () => closeProject(),
       });
     }
 
@@ -233,7 +233,7 @@ export default function App() {
           label: entry.name,
           description: entry.path,
           group: "Recent projects",
-          onTrigger: async () => {
+          onClick: async () => {
             try {
               await openProject(entry.path);
             } catch (err) {
@@ -250,14 +250,14 @@ export default function App() {
       label: "Help",
       description: "What every button does and keyboard shortcuts",
       group: "View",
-      onTrigger: () => openHelp(),
+      onClick: () => openHelp(),
     });
     actions.push({
       id: "about",
       label: "About Audio Bench",
       description: "Credits, privacy and licence",
       group: "View",
-      onTrigger: () => openAbout(),
+      onClick: () => openAbout(),
     });
 
     // Theme
@@ -266,7 +266,7 @@ export default function App() {
         id: `theme-${scheme}`,
         label: `Theme: ${scheme}`,
         group: "Theme",
-        onTrigger: () =>
+        onClick: () =>
           colorScheme.setColorScheme(scheme as "light" | "dark" | "auto"),
       });
     }
@@ -800,4 +800,4 @@ export default function App() {
       <DropzoneOverlay />
     </div>
   );
-}
+};

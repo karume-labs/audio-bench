@@ -1,5 +1,5 @@
+import { isTauri } from "@/ipc/commands";
 import { type UnlistenFn, listen } from "@tauri-apps/api/event";
-import { isTauri } from "./commands";
 
 export interface AnalysisProgress {
   phase: string;

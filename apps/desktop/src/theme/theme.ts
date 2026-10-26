@@ -1,5 +1,5 @@
+import { amber, dark, gray, rose, teal } from "@/theme/colors";
 import { createTheme } from "@mantine/core";
-import { amber, dark, gray, rose, teal } from "./colors";
 
 export const theme = createTheme({
   primaryColor: "teal",

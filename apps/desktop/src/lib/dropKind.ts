@@ -1,4 +1,4 @@
-import { AUDIO_EXTENSIONS, extname } from "./format";
+import { AUDIO_EXTENSIONS, extname } from "@/lib/format";
 
 /**
  * What a drag or drop is carrying, as far as the app can act on it.
