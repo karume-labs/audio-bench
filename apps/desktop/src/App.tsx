@@ -7,7 +7,6 @@ import { StartScreen } from "@/components/StartScreen";
 import { WaveformWorkspace } from "@/components/WaveformWorkspace";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { onAnalysisProgress } from "@/ipc/events";
-import { ensureNotificationPermission } from "@/lib/osNotify";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { AppShell, Stack, useMantineColorScheme } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
@@ -58,10 +57,6 @@ export const App = () => {
   );
 
   const setProgress = useProjectStore((s) => s.setProgress);
-
-  useEffect(() => {
-    void ensureNotificationPermission();
-  }, []);
 
   useFileDrop();
 

@@ -5,28 +5,29 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 
-let permissionEnsured = false;
+let permissionRequest: Promise<boolean> | null = null;
 
-/** Ensure notification permission is granted (asks once per session). */
-export const ensureNotificationPermission = async (): Promise<boolean> => {
-  if (permissionEnsured) {
-    try {
-      return await isPermissionGranted();
-    } catch {
-      return false;
-    }
-  }
+const requestOnce = async (): Promise<boolean> => {
   try {
     let granted = await isPermissionGranted();
     if (!granted) {
       const result = await requestPermission();
       granted = result === "granted";
     }
-    permissionEnsured = true;
     return granted;
   } catch {
     return false;
   }
+};
+
+/**
+ * Ensure notification permission is granted. The request is cached as a
+ * single in-flight promise so concurrent callers (e.g. React StrictMode's
+ * double-invoked mount effect) share one prompt instead of asking twice.
+ */
+export const ensureNotificationPermission = (): Promise<boolean> => {
+  permissionRequest ??= requestOnce();
+  return permissionRequest;
 };
 
 /**
