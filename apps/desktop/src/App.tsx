@@ -3,6 +3,7 @@ import { AppOverlays } from "@/components/AppOverlays";
 import { InspectorPanel } from "@/components/InspectorPanel";
 import { ClipTable } from "@/components/ClipTable";
 import { ProjectSidebar } from "@/components/ProjectSidebar";
+import { SidebarResizeHandle } from "@/components/SidebarResizeHandle";
 import { StartScreen } from "@/components/StartScreen";
 import { WaveformWorkspace } from "@/components/WaveformWorkspace";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -28,6 +29,10 @@ export const App = () => {
   }, []);
 
   const [navbarOpened, { toggle: toggleNavbar }] = useDisclosure(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [navbarWidth, setNavbarWidth] = useState(288);
+  const [asideWidth, setAsideWidth] = useState(336);
   const [inspectorOpened, { open: openInspector, close: closeInspector }] =
     useDisclosure(false);
   const [aboutOpened, { open: openAbout, close: closeAbout }] =
@@ -89,14 +94,20 @@ export const App = () => {
       <AppShell
         header={{ height: headerHeight }}
         navbar={{
-          width: 288,
+          width: navbarWidth,
           breakpoint: "sm",
-          collapsed: { mobile: !navbarOpened, desktop: !hasProject },
+          collapsed: {
+            mobile: !navbarOpened,
+            desktop: !hasProject || sidebarCollapsed,
+          },
         }}
         aside={{
-          width: 336,
+          width: asideWidth,
           breakpoint: "md",
-          collapsed: { mobile: true, desktop: !hasProject },
+          collapsed: {
+            mobile: true,
+            desktop: !hasProject || inspectorCollapsed,
+          },
         }}
         padding={0}
       >
@@ -104,6 +115,10 @@ export const App = () => {
           <AppHeader
             navbarOpened={navbarOpened}
             toggleNavbar={toggleNavbar}
+            sidebarCollapsed={sidebarCollapsed}
+            toggleSidebar={() => setSidebarCollapsed((c) => !c)}
+            inspectorCollapsed={inspectorCollapsed}
+            toggleInspector={() => setInspectorCollapsed((c) => !c)}
             openInspector={openInspector}
             openHelp={openHelp}
             openAbout={openAbout}
@@ -113,10 +128,24 @@ export const App = () => {
 
         <AppShell.Navbar p={0}>
           <ProjectSidebar />
+          <SidebarResizeHandle
+            edge="right"
+            width={navbarWidth}
+            min={220}
+            max={480}
+            onChange={setNavbarWidth}
+          />
         </AppShell.Navbar>
 
         <AppShell.Aside p={0}>
           <InspectorPanel />
+          <SidebarResizeHandle
+            edge="left"
+            width={asideWidth}
+            min={260}
+            max={560}
+            onChange={setAsideWidth}
+          />
         </AppShell.Aside>
 
         <AppShell.Main>

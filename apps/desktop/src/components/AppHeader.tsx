@@ -19,6 +19,10 @@ import {
   IconBrightnessAuto,
   IconHelpCircle,
   IconInfoCircle,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
+  IconLayoutSidebarRightCollapse,
+  IconLayoutSidebarRightExpand,
   IconMoon,
   IconSettings,
   IconSunHigh,
@@ -27,6 +31,10 @@ import {
 interface AppHeaderProps {
   navbarOpened: boolean;
   toggleNavbar: () => void;
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  inspectorCollapsed: boolean;
+  toggleInspector: () => void;
   openInspector: () => void;
   openHelp: () => void;
   openAbout: () => void;
@@ -36,6 +44,10 @@ interface AppHeaderProps {
 export const AppHeader = ({
   navbarOpened,
   toggleNavbar,
+  sidebarCollapsed,
+  toggleSidebar,
+  inspectorCollapsed,
+  toggleInspector,
   openInspector,
   openHelp,
   openAbout,
@@ -58,6 +70,26 @@ export const AppHeader = ({
     <Group h="100%" px="md" justify="space-between" wrap="nowrap">
       <Group gap="sm" wrap="nowrap">
         <Burger opened={navbarOpened} onClick={toggleNavbar} hiddenFrom="sm" />
+        {project && (
+          <Tip
+            label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            description="Collapse or expand the left sidebar."
+          >
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              visibleFrom="sm"
+              onClick={toggleSidebar}
+              aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <IconLayoutSidebarLeftExpand size={16} />
+              ) : (
+                <IconLayoutSidebarLeftCollapse size={16} />
+              )}
+            </ActionIcon>
+          </Tip>
+        )}
         <Tip
           label="Import by dropping files"
           description="Drag a recording or a .audiobench project anywhere onto the window."
@@ -113,6 +145,24 @@ export const AppHeader = ({
                 aria-label="Redo"
               >
                 <IconArrowForwardUp size={16} />
+              </ActionIcon>
+            </Tip>
+            <Tip
+              label={inspectorCollapsed ? "Show inspector" : "Hide inspector"}
+              description="Collapse or expand the right inspector panel."
+            >
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                visibleFrom="md"
+                onClick={toggleInspector}
+                aria-label={inspectorCollapsed ? "Show inspector" : "Hide inspector"}
+              >
+                {inspectorCollapsed ? (
+                  <IconLayoutSidebarRightExpand size={16} />
+                ) : (
+                  <IconLayoutSidebarRightCollapse size={16} />
+                )}
               </ActionIcon>
             </Tip>
             <Tip
