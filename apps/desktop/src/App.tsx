@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 import { AppOverlays } from "@/components/AppOverlays";
-import { ClipInspector } from "@/components/ClipInspector";
+import { InspectorPanel } from "@/components/InspectorPanel";
 import { ClipTable } from "@/components/ClipTable";
 import { ProjectSidebar } from "@/components/ProjectSidebar";
 import { StartScreen } from "@/components/StartScreen";
@@ -34,6 +34,9 @@ export const App = () => {
   const [aboutOpened, { open: openAbout, close: closeAbout }] =
     useDisclosure(false);
   const [helpOpened, { open: openHelp, close: closeHelp }] =
+    useDisclosure(false);
+
+  const [settingsOpened, { open: openSettings, close: closeSettings }] =
     useDisclosure(false);
 
   const colorScheme = useMantineColorScheme();
@@ -109,6 +112,7 @@ export const App = () => {
             openInspector={openInspector}
             openHelp={openHelp}
             openAbout={openAbout}
+            openSettings={openSettings}
           />
         </AppShell.Header>
 
@@ -117,7 +121,7 @@ export const App = () => {
         </AppShell.Navbar>
 
         <AppShell.Aside p={0}>
-          <ClipInspector />
+          <InspectorPanel />
         </AppShell.Aside>
 
         <AppShell.Main>
@@ -161,6 +165,8 @@ export const App = () => {
         closeAbout={closeAbout}
         helpOpened={helpOpened}
         closeHelp={closeHelp}
+        settingsOpened={settingsOpened}
+        closeSettings={closeSettings}
       />
 
       <Spotlight

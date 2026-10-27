@@ -20,6 +20,7 @@ import {
   IconHelpCircle,
   IconInfoCircle,
   IconMoon,
+  IconSettings,
   IconSunHigh,
 } from "@tabler/icons-react";
 
@@ -29,6 +30,7 @@ interface AppHeaderProps {
   openInspector: () => void;
   openHelp: () => void;
   openAbout: () => void;
+  openSettings: () => void;
 }
 
 export const AppHeader = ({
@@ -37,6 +39,7 @@ export const AppHeader = ({
   openInspector,
   openHelp,
   openAbout,
+  openSettings,
 }: AppHeaderProps) => {
   const project = useProjectStore((s) => s.project);
   const busy = useProjectStore((s) => s.busy);
@@ -146,6 +149,18 @@ export const AppHeader = ({
             visibleFrom="md"
           />
         </Tip>
+        {project && (
+          <Tip label="Project settings" description="Rename the project, change the export name template or delete it.">
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              onClick={openSettings}
+              aria-label="Project settings"
+            >
+              <IconSettings size={16} />
+            </ActionIcon>
+          </Tip>
+        )}
         <Tip
           label="Help"
           description="What every button does, plus all keyboard shortcuts."

@@ -1,18 +1,14 @@
-import { ProjectDetails } from "@/components/ProjectDetails";
 import { Tip } from "@/components/Tip";
 import { useProjectStore } from "@/stores/useProjectStore";
 import {
   Button,
-  Divider,
   Group,
   NumberInput,
   Paper,
   Stack,
   Text,
-  ThemeIcon,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconDeviceFloppy } from "@tabler/icons-react";
 
 const PROFILE_ROWS: Array<[label: string, value: string]> = [
   ["Frame", "10 ms"],
@@ -25,7 +21,6 @@ const PROFILE_ROWS: Array<[label: string, value: string]> = [
 
 export const ProjectProfile = () => {
   const project = useProjectStore((s) => s.project);
-  const projectPath = useProjectStore((s) => s.projectPath);
   const busy = useProjectStore((s) => s.busy);
   const exporting = useProjectStore((s) => s.exporting);
   const detectionMinSilenceMs = useProjectStore((s) => s.detectionMinSilenceMs);
@@ -55,11 +50,7 @@ export const ProjectProfile = () => {
   };
 
   return (
-    <>
-      <Divider />
-      <Text fw={700} size="sm">
-        Processing profile
-      </Text>
+    <Stack gap="xs">
       <Tip
         label="Detection profile"
         description="Settings the silence detector ran with: 10 ms frames, 20 dB margin over the noise floor, adjustable minimum silence, 300 ms minimum clip."
@@ -128,29 +119,6 @@ export const ProjectProfile = () => {
           Re-analyze with current settings
         </Button>
       </Tip>
-
-      <ProjectDetails />
-
-      <Divider />
-      <Text fw={700} size="sm">
-        Project file
-      </Text>
-      <Tip
-        label="Project file"
-        description="Autosaved after every edit. Reopen it with Open, or by dropping the file anywhere on the window."
-      >
-        <Group gap="xs">
-          <ThemeIcon size="sm" variant="light" color="gray">
-            <IconDeviceFloppy size={14} />
-          </ThemeIcon>
-          <Text size="xs" ff="monospace" lineClamp={2}>
-            {projectPath ?? "-"}
-          </Text>
-        </Group>
-      </Tip>
-      <Text size="xs" c="dimmed">
-        Accepts WAV, FLAC, MP3, M4A and .audiobench files.
-      </Text>
-    </>
+    </Stack>
   );
 };

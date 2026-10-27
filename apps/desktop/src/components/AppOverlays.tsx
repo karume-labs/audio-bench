@@ -1,7 +1,8 @@
 import { AboutModal } from "@/components/AboutModal";
-import { ClipInspector } from "@/components/ClipInspector";
+import { InspectorPanel } from "@/components/InspectorPanel";
 import { DropzoneOverlay } from "@/components/DropzoneOverlay";
 import { HelpModal } from "@/components/HelpModal";
+import { ProjectSettingsModal } from "@/components/ProjectSettingsModal";
 import { Drawer, Text, Title } from "@mantine/core";
 
 interface AppOverlaysProps {
@@ -12,6 +13,8 @@ interface AppOverlaysProps {
   closeAbout: () => void;
   helpOpened: boolean;
   closeHelp: () => void;
+  settingsOpened: boolean;
+  closeSettings: () => void;
 }
 
 export const AppOverlays = ({
@@ -22,6 +25,8 @@ export const AppOverlays = ({
   closeAbout,
   helpOpened,
   closeHelp,
+  settingsOpened,
+  closeSettings,
 }: AppOverlaysProps) => (
   <>
     <Drawer
@@ -32,11 +37,12 @@ export const AppOverlays = ({
       title="Clip inspector"
       hiddenFrom="md"
     >
-      <ClipInspector />
+      <InspectorPanel />
     </Drawer>
 
     <AboutModal opened={aboutOpened} onClose={closeAbout} />
     <HelpModal opened={helpOpened} onClose={closeHelp} />
+    <ProjectSettingsModal opened={settingsOpened} onClose={closeSettings} />
 
     {splashVisible && (
       <div

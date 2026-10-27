@@ -1,4 +1,4 @@
-import { ProjectProfile } from "@/components/ProjectProfile";
+import { ProjectStat as Stat } from "@/components/ProjectStat";
 import { Tip } from "@/components/Tip";
 import { pickDirectory } from "@/ipc/commands";
 import { formatDuration } from "@/lib/format";
@@ -12,13 +12,16 @@ import {
   Divider,
   Group,
   List,
+  SimpleGrid,
   Stack,
   Text,
+  ThemeIcon,
 } from "@mantine/core";
-import { IconPlayerPlay } from "@tabler/icons-react";
+import { IconDeviceFloppy, IconPlayerPlay } from "@tabler/icons-react";
 
 export const ProjectSession = () => {
   const project = useProjectStore((s) => s.project);
+  const projectPath = useProjectStore((s) => s.projectPath);
   const busy = useProjectStore((s) => s.busy);
   const exporting = useProjectStore((s) => s.exporting);
   const exportBlockers = useProjectStore((s) => s.exportBlockers);
@@ -56,50 +59,30 @@ export const ProjectSession = () => {
       <Text fw={700} size="sm">
         Session
       </Text>
-      <Stack gap={4}>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Duration
-          </Text>
-          <Text size="xs" ff="monospace">
-            {formatDuration(project.source.duration_s)}
-          </Text>
-        </Group>
-        <Tip
-          label="Conformed master"
-          description="The source is rewritten as 24-bit / 48 kHz mono WAV beside the original; the waveform and every export read this file."
-        >
-          <Group justify="space-between">
-            <Text size="xs" c="dimmed">
-              Master
-            </Text>
-            <Text size="xs" ff="monospace">
-              24-bit / 48 kHz mono
-            </Text>
-          </Group>
-        </Tip>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Clips
-          </Text>
-          <Text size="xs" ff="monospace">
-            {clipCount}
-            {clipCount !== activeCount
-              ? ` (${clipCount - activeCount} rejected)`
-              : ""}
-          </Text>
-        </Group>
-        <Group justify="space-between">
-          <Text size="xs" c="dimmed">
-            Active clip
-          </Text>
-          <Text size="xs" ff="monospace">
-            {activeClipId
+      <SimpleGrid cols={2} spacing="xs">
+        <Stat label="Duration" value={formatDuration(project.source.duration_s)} />
+        <Stat
+          label="Master"
+          value="24-bit / 48 kHz mono"
+          tip={{
+            label: "Conformed master",
+            description:
+              "The source is rewritten as 24-bit / 48 kHz mono WAV beside the original; the waveform and every export read this file.",
+          }}
+        />
+        <Stat
+          label="Clips"
+          value={`${clipCount}${clipCount !== activeCount ? ` (${clipCount - activeCount} rejected)` : ""}`}
+        />
+        <Stat
+          label="Active clip"
+          value={
+            activeClipId
               ? `#${project.clips.findIndex((c) => c.id === activeClipId) + 1}`
-              : "-"}
-          </Text>
-        </Group>
-      </Stack>
+              : "-"
+          }
+        />
+      </SimpleGrid>
 
       {(project.source.warnings?.length ?? 0) > 0 && (
         <Alert color="amber" title="Conform warnings">
@@ -132,7 +115,25 @@ export const ProjectSession = () => {
         </Alert>
       )}
 
-      <ProjectProfile />
+      <Divider />
+      <Stack gap={4}>
+        <Text fw={700} size="sm">
+          Project file
+        </Text>
+        <Tip
+          label="Project file"
+          description="Autosaved after every edit. Reopen it with Open, or by dropping the file anywhere on the window."
+        >
+          <Group gap="xs" wrap="nowrap">
+            <ThemeIcon size="sm" variant="light" color="gray">
+              <IconDeviceFloppy size={14} />
+            </ThemeIcon>
+            <Text size="xs" ff="monospace" lineClamp={2}>
+              {projectPath ?? "-"}
+            </Text>
+          </Group>
+        </Tip>
+      </Stack>
     </>
   );
 };
