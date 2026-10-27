@@ -102,7 +102,7 @@ export const ProjectSession = () => {
       </Stack>
 
       {(project.source.warnings?.length ?? 0) > 0 && (
-        <Alert color="yellow" title="Conform warnings">
+        <Alert color="amber" title="Conform warnings">
           <List size="xs" spacing={2}>
             {project.source.warnings?.map((w) => (
               <List.Item key={w}>{w}</List.Item>
@@ -117,7 +117,6 @@ export const ProjectSession = () => {
       >
         <Button
           leftSection={<IconPlayerPlay size={16} />}
-          color="green"
           onClick={onExport}
           loading={exporting}
           disabled={busy || exporting}
@@ -128,7 +127,7 @@ export const ProjectSession = () => {
       </Tip>
 
       {gate && (
-        <Alert color="red" title="Export blocked">
+        <Alert color="rose" title="Export blocked">
           {gate}
         </Alert>
       )}

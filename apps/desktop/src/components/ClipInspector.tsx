@@ -94,7 +94,7 @@ export const ClipInspector = () => {
         </Group>
 
         {flags.includes("edge_clamped") && (
-          <Alert color="yellow" title="Edge clamped">
+          <Alert color="amber" title="Edge clamped">
             The export window runs into the recording edge - silence will be
             padded to guarantee the full 5s lead-in/out.
           </Alert>

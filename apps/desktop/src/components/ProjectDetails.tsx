@@ -45,7 +45,7 @@ export const ProjectDetails = () => {
       >
         <Button
           size="xs"
-          color="red"
+          color="rose"
           variant="light"
           fullWidth
           onClick={() => {
@@ -58,7 +58,7 @@ export const ProjectDetails = () => {
                 </Text>
               ),
               labels: { confirm: "Delete", cancel: "Cancel" },
-              confirmProps: { color: "red" },
+              confirmProps: { color: "rose" },
               onConfirm: () => void deleteProject(),
             });
           }}

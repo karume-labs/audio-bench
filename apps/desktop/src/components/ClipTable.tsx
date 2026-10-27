@@ -17,7 +17,7 @@ import {
 import { useEffect, useMemo, useRef } from "react";
 
 import { Tip } from "@/components/Tip";
-import { CLIP_STATUS_COLOR } from "@/theme";
+import { CLIP_FLAG_COLOR, CLIP_STATUS_COLOR } from "@/theme";
 
 const statusColor = (status: string): string =>
   CLIP_STATUS_COLOR[status as keyof typeof CLIP_STATUS_COLOR] ?? "gray";
@@ -195,7 +195,7 @@ export const ClipTable = () => {
                     cursor: "pointer",
                     outline:
                       clip.id === activeClipId
-                        ? "1px solid var(--mantine-color-blue-5)"
+                        ? "1px solid var(--mantine-color-teal-5)"
                         : undefined,
                   }}
                   onClick={() => {
@@ -269,7 +269,11 @@ export const ClipTable = () => {
                         >
                           <Badge
                             size="xs"
-                            color={f === "duration_outlier" ? "red" : "yellow"}
+                            color={
+                              f === "duration_outlier"
+                                ? "rose"
+                                : CLIP_FLAG_COLOR
+                            }
                             variant="light"
                           >
                             {f === "duration_outlier" ? "DUR" : "EDGE"}

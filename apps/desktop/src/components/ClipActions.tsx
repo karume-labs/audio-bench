@@ -1,6 +1,7 @@
 import { Tip } from "@/components/Tip";
 import { useEditorStore } from "@/stores/useEditorStore";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { CLIP_STATUS_COLOR } from "@/theme";
 import { Button, Group } from "@mantine/core";
 
 interface ClipActionsProps {
@@ -22,7 +23,7 @@ export const ClipActions = ({ clipId, status }: ClipActionsProps) => {
         >
           <Button
             size="xs"
-            color="green"
+            color={CLIP_STATUS_COLOR.approved}
             onClick={() => setClipStatus(clipId, "approved")}
             disabled={status === "approved"}
           >
@@ -35,7 +36,7 @@ export const ClipActions = ({ clipId, status }: ClipActionsProps) => {
         >
           <Button
             size="xs"
-            color="red"
+            color={CLIP_STATUS_COLOR.rejected}
             variant="light"
             onClick={() => setClipStatus(clipId, "rejected")}
             disabled={status === "rejected"}

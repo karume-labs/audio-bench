@@ -325,7 +325,7 @@ function WaveformWorkspaceComponent() {
   return (
     <Stack gap="xs" h="100%" p="sm" justify="center">
       {loadError && (
-        <Alert color="red" title="Waveform failed to load">
+        <Alert color="rose" title="Waveform failed to load">
           {loadError}
         </Alert>
       )}
